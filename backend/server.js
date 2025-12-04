@@ -1,10 +1,10 @@
 import express from "express"
 const app = express();
-// app.get('/', (req, res) => {
-//     res.send(`<a href="http://localhost:${port}/it"><button>route change</button></a>`);
-
-// });
-app.get('/jokes', (req, res) => {
+app.get('/on', (req, res) => {
+    res.send(`<a href="http://localhost:${port}/it"><button>route change</button></a>`);
+});
+app.use(express.static('dist'))
+app.get('/api/jokes', (req, res) => {
     const jokes = [
         {
             id: 1,
@@ -29,18 +29,22 @@ app.get('/jokes', (req, res) => {
         {
             id: 5,
             title: "Array joke",
-            content: "I’d tell you a joke about arrays, but it’s out of bounds."
+            content: "I'd tell you a joke about arrays, but it's out of bounds."
         },
         {
             id: 6,
             title: "Logic joke",
             content: "There are 10 types of people in the world: those who understand binary and those who don't."
+        },{
+            id:7,
+            title:"wow ji",
+            content:"there is no joke"
         }
     ];
     res.send(jokes);
 })
 app.get('/it', (req, res) => {
-    res.send(`<a href="http://localhost:${port}"><button>route change</button></a>`)
+    res.send(`<a href="http://localhost:${port}/on"><button>route change</button></a>`)
 });
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
