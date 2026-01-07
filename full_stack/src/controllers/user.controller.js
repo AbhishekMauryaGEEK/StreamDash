@@ -5,4 +5,4 @@ const registerUser =asynchandler(async(req,res)=>{
         message:"okjijg"
     })
 })
-export {registerUser
+export {registerUser}
