@@ -2,6 +2,7 @@ import { asynchandler } from "../utiles/asynchandler.js";
 import { ApiError } from "../utiles/Apperror.js";
 import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
+import { ApiResponse } from "../utiles/Apiresponse.js";
 const registerUser = asynchandler(async (req, res) => {
     //get user details from frontend
     //validation -not empty
@@ -57,6 +58,10 @@ const registerUser = asynchandler(async (req, res) => {
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong when regestring the User")
     }
+    return res.status(201).json(
+        new ApiResponse(200, createdUser, "User registered succesfully!")
+        
+    )
 })
 
 export { registerUser }
