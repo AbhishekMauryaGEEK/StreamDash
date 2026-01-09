@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors";
 import cookieparser from "cookie-parser"
+import multer from "multer"
 const app = express();
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
@@ -11,7 +12,7 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }))
 app.use(express.static("public"))
 app.use(cookieparser())
 
-app.use((req, res, next) => {
+app.use((error,req, res, next) => {
     console.log("---------------------");
     console.log("INCOMING REQUEST:");
     console.log("METHOD:", req.method);
@@ -22,6 +23,15 @@ app.use((req, res, next) => {
 })
 import router from "./routes/user.routes.js";
 app.use("/api/v1/users",router)
+// Add this AFTER all your routes
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        console.log(' MULTER ERROR FIELD:', error.field);  // This shows the BAD field name
+        return res.status(400).json({ error: `Unexpected field: ${error.field}` });
+    }
+    next(error);
+});
+
 //ex Route: http://localhost:8000/api/v1/users +/register =>
 // http://localhost:8000/api/v1/users/register
 //other examples like  http://localhost:8000/api/v1/users +/login or /help or /credits etc 
