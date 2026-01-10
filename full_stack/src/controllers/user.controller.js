@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
 import { v2 as cloudinary } from "cloudinary";
+import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
 
 const registerUser = asynchandler(async (req, res) => {
     //get user details from frontend
@@ -40,28 +41,24 @@ const registerUser = asynchandler(async (req, res) => {
     if (!avatarLocal) {
         throw new ApiError(400, "Avatar is required")
     }
-    
-    // ✅ FIXED: Use cloudinary for BOTH files (was using upload() middleware incorrectly)
+
+    //  FIXED: Use cloudinary for BOTH files (was using upload() middleware incorrectly)
     const avatar = await cloudinary.uploader.upload(avatarLocal);
-    const coverimage = coverImageLocalPath ? await cloudinary.uploader.upload(coverImageLocalPath) : null;
-    
+    const coverimage = await cloudinary.uploader.upload(coverImageLocalPath);
+
     if (!avatar) {
         throw new ApiError(404, "Avatar file is not found")
-    }
-    
-    // ✅ FIXED: Move coverImage check AFTER upload (and make optional)
-    if (!coverImageLocalPath && !coverimage) {
-        console.log("Cover image is optional - proceeding without it");
     }
 
     const userdata = await User.create({
         fullname,
         avatar: avatar.url,
-        coverimage: coverimage?.url || "",
+        coverImage: coverimage?.url || "",  // ✅ FIXED: coverImage (not coverimage)
         email,
         password,
         username: username.toLowerCase()
     })
+    await userdata.save();
     console.log(userdata);
     const createdUser = await User.findById(userdata._id).select(
         "-password -refreshToken"
