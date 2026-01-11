@@ -21,7 +21,7 @@ const upload = async (localFilePath) => {
         // 2. Attempt to Delete Local File
         try {
             fs.unlinkSync(localFilePath);
-            console.log("🗑️ Local file deleted successfully");
+            console.log(" Local file deleted successfully");
         } catch (deleteError) {
             // This will print WHY the file isn't deleting
             console.error(" DELETION ERROR:", deleteError.message);
@@ -37,7 +37,7 @@ const upload = async (localFilePath) => {
         try {
             if (fs.existsSync(localFilePath)) {
                 fs.unlinkSync(localFilePath);
-                console.log("🗑️ Local file deleted after error");
+                console.log(" Local file deleted after error");
             }
         } catch (unlinkError) {
             console.error("DELETION ERROR (Clean up):", unlinkError.message);
