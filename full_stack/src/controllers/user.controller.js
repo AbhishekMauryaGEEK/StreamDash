@@ -42,7 +42,7 @@ const registerUser = asynchandler(async (req, res) => {
         throw new ApiError(400, "Avatar is required")
     }
 
-    //  FIXED: Use cloudinary for BOTH files (was using upload() middleware incorrectly)
+    //   Use cloudinary for BOTH files 
     const avatar = await cloudinary.uploader.upload(avatarLocal);
     const coverimage = await cloudinary.uploader.upload(coverImageLocalPath);
 
@@ -53,7 +53,7 @@ const registerUser = asynchandler(async (req, res) => {
     const userdata = await User.create({
         fullname,
         avatar: avatar.url,
-        coverImage: coverimage?.url || "",  //  FIXED: coverImage (not coverimage)
+        coverImage: coverimage?.url || "",  
         email,
         password,
         username: username.toLowerCase()
