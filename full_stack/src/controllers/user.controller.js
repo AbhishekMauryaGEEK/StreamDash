@@ -3,7 +3,6 @@ import { ApiError } from "../utiles/Apperror.js";
 import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
-import { v2 as cloudinary } from "cloudinary";
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
 
 const registerUser = asynchandler(async (req, res) => {
@@ -37,14 +36,19 @@ const registerUser = asynchandler(async (req, res) => {
     }
     const avatarLocal = req.files?.avatar[0]?.path;
     console.log(avatarLocal);
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
     if (!avatarLocal) {
         throw new ApiError(400, "Avatar is required")
     }
 
     //   Use cloudinary for BOTH files 
-    const avatar = await cloudinary.uploader.upload(avatarLocal);
-    const coverimage = await cloudinary.uploader.upload(coverImageLocalPath);
+    const avatar = await uploadToCloudinary(avatarLocal);
+    const coverimage = coverImageLocalPath ? await uploadToCloudinary(coverImageLocalPath) : "";
 
     if (!avatar) {
         throw new ApiError(404, "Avatar file is not found")
@@ -52,8 +56,8 @@ const registerUser = asynchandler(async (req, res) => {
 
     const userdata = await User.create({
         fullname,
-        avatar: avatar.url,
-        coverImage: coverimage?.url || "",  
+        avatar: avatar,
+        coverImage: coverimage || "",  
         email,
         password,
         username: username.toLowerCase()
