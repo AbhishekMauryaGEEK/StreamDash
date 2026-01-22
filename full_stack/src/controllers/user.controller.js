@@ -152,4 +152,4 @@ const logoutUser = asynchandler(async (res, req) => {
     },"user logged out"))
 })
 
-export { registerUser, loginUser, logoutUser}
+export {registerUser, loginUser, logoutUser}
