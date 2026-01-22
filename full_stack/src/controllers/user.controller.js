@@ -122,15 +122,34 @@ const loginUser = asynchandler(async (req, res) => {
         .json(
             new ApiResponse(200,
                 {
-                    user:loggedinuser,accessToken,refreshToken
+                    user: loggedinuser, accessToken, refreshToken
                 },
                 "user logged in succesfuly"
             )
         )
 
 })
-const logoutUser =asynchandler(async (res,req)=>{
-    re
+const logoutUser = asynchandler(async (res, req) => {
+    await User.findByIdAndUpdate(
+        req.user._id, {
+        $set: {
+            refreshToken: undefined
+        }
+    },
+        {
+            new: true
+        }
+    )
+    const options = {
+        httpOly: true,
+        secure: true
+    }
+    return res
+    .status(200)
+    .coverCookie("accessToken",options)
+    .coverCookie("refreshToken",options)
+    .json(new ApiResponse(200,{
+    },"user logged out"))
 })
 
-export { registerUser, loginUser ,logoutUser}
+export { registerUser, loginUser, logoutUser }
