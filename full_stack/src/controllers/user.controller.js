@@ -4,7 +4,20 @@ import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
+const generateAccessandrefereshtokens = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accesstoken = await user.generateAccessToken();
+        const refereshtoken = await user.generateRefreshToken();
+        user.refreshToken = refereshtoken;
+        await user.save({ validateBeforeSave: false })
+        return { accesstoken, refereshtoken };
+    }
+    catch (error) {
+        throw new ApiError(500, "something went wrong  while generating refresesh and access token")
 
+    }
+}
 const registerUser = asynchandler(async (req, res) => {
     //get user details from frontend
     //validation -not empty
@@ -36,7 +49,7 @@ const registerUser = asynchandler(async (req, res) => {
     }
     const avatarLocal = req.files?.avatar[0]?.path;
     console.log(avatarLocal);
-    
+
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path
@@ -57,7 +70,7 @@ const registerUser = asynchandler(async (req, res) => {
     const userdata = await User.create({
         fullname,
         avatar: avatar,
-        coverImage: coverimage || "",  
+        coverImage: coverimage || "",
         email,
         password,
         username: username.toLowerCase()
@@ -75,4 +88,49 @@ const registerUser = asynchandler(async (req, res) => {
     )
 })
 
-export { registerUser }
+const loginUser = asynchandler(async (req, res) => {
+    //req body ->data
+    //username or email
+    //find the user 
+    //password check
+    //access and referesh token 
+    //send cookie 
+    const { email, username, password } = req.body
+    if (!username || !email) {
+        throw new ApiError(400, "email or username is not correct ")
+    }
+    const userres = await User.findOne({
+        $or: [{ email }, { username }]
+    })
+    if (!userres) {
+        throw new ApiError(404, "user does not exist");
+    }
+    const passres = await username.isPasswordCorrect(password)
+    if (passres) {
+        throw new ApiError(401, "password is incorrect");
+    }
+    const { accessToken, refreshToken } = await generateAccessandrefereshtokens(userres._id)
+    const loggedinuser = await User.findById(userres._id).select("-password -refreshToken")
+    const options = {
+        httpOly: true,
+        secure: true
+    }
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshtoken", refreshToken, options)
+        .json(
+            new ApiResponse(200,
+                {
+                    user:loggedinuser,accessToken,refreshToken
+                },
+                "user logged in succesfuly"
+            )
+        )
+
+})
+const logoutUser =asynchandler(async (res,req)=>{
+    re
+})
+
+export { registerUser, loginUser ,logoutUser}
