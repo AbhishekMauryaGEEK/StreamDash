@@ -1,5 +1,5 @@
 import { asynchandler } from "../utiles/asynchandler.js";
-import { ApiError } from "../utiles/Apperror.js";
+import { ApiError } from "../utiles/APIerror.js";
 import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
@@ -59,7 +59,7 @@ const registerUser = asynchandler(async (req, res) => {
         throw new ApiError(400, "Avatar is required")
     }
 
-    //   Use cloudinary for BOTH files 
+    // cloudinary for BOTH files 
     const avatar = await uploadToCloudinary(avatarLocal);
     const coverimage = coverImageLocalPath ? await uploadToCloudinary(coverImageLocalPath) : "";
 
@@ -89,46 +89,50 @@ const registerUser = asynchandler(async (req, res) => {
 })
 
 const loginUser = asynchandler(async (req, res) => {
-    //req body ->data
-    //username or email
-    //find the user 
-    //password check
-    //access and referesh token 
-    //send cookie 
-    const { email , username, password } = req.body
-    if (!username || !email) {
-        throw new ApiError(400, "email or username is not correct ")
+    const { email, username, password } = req.body
+    
+    if (!username && !email || !password) {
+        throw new ApiError(400, "email/username and password required");
     }
+
+    // Find user
     const userres = await User.findOne({
         $or: [{ email }, { username }]
     })
+    
     if (!userres) {
         throw new ApiError(404, "user does not exist");
     }
-    const passres = await username.isPasswordCorrect(password)
-    if (passres) {
+
+    const passres = await userres.isPasswordCorrect(password)  // ← userres!
+    
+  // Logic was backwards  
+    if (!passres) {  // ← NOT passres
         throw new ApiError(401, "password is incorrect");
     }
+  
     const { accessToken, refreshToken } = await generateAccessandrefereshtokens(userres._id)
-    const loggedinuser = await User.findById(userres._id).select("-password -refreshToken")
+    
+    const loggedinuser = await User.findById(userres._id).select("-password")
+    
     const options = {
-        httpOly: true,
-        secure: true
+        httpOnly: true,      
+        secure: process.env.NODE_ENV === "production"
     }
+    
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)            
-        .cookie("refreshtoken", refreshToken, options)
+        .cookie("accessToken", accessToken, options) 
+        .cookie("refreshToken", refreshToken, options)  // ← Typo was refreshtoken
         .json(
-            new ApiResponse(200,
-                {
-                    user: loggedinuser, accessToken, refreshToken
-                },
-                "user logged in succesfuly"
-            )
+            new ApiResponse(200, {
+                user: loggedinuser, 
+                accessToken, 
+                refreshToken
+            }, "user logged in successfully")
         )
-
 })
+
 const logoutUser = asynchandler(async (res, req) => {
     await User.findByIdAndUpdate(
         req.user._id, {

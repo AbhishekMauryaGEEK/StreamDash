@@ -17,7 +17,7 @@ connectDb()
 .catch((err)=>{
     console.log(`failed to log to the databse ${err}`)
 })
-//Aproch 1
+// Aproch 1
 // import express from "express"
 // const app=express();
 // (async()=>{
