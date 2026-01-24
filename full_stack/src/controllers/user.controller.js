@@ -95,7 +95,7 @@ const loginUser = asynchandler(async (req, res) => {
     //password check
     //access and referesh token 
     //send cookie 
-    const { email, username, password } = req.body
+    const { email , username, password } = req.body
     if (!username || !email) {
         throw new ApiError(400, "email or username is not correct ")
     }
@@ -117,7 +117,7 @@ const loginUser = asynchandler(async (req, res) => {
     }
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
+        .cookie("accessToken", accessToken, options)            
         .cookie("refreshtoken", refreshToken, options)
         .json(
             new ApiResponse(200,

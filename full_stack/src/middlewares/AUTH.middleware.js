@@ -4,7 +4,6 @@ import { asynchandler } from "../utiles/asynchandler.js";
 import jwt from "jsonwebtoken";
 export const verifyJWT = asynchandler(async (req, res, next) => {
     try{
-
         const token = await req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer", "")
         if (!token) {
             throw new ApiError(401,"Unauthorized request")
