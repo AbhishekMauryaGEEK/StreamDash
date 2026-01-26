@@ -3,6 +3,7 @@ import { ApiError } from "../utiles/APIerror.js";
 import { User } from "../models/user.model.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
+import jwt from "jsonwebtoken"; 
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
 const generateAccessandrefereshtokens = async (userId) => {
     try {
@@ -10,6 +11,7 @@ const generateAccessandrefereshtokens = async (userId) => {
         const accesstoken = await user.generateAccessToken();
         const refereshtoken = await user.generateRefreshToken();
         user.refreshToken = refereshtoken;
+        user.accessToken=accesstoken;
         await user.save({ validateBeforeSave: false })
         return { accesstoken, refereshtoken };
     }
@@ -89,6 +91,8 @@ const registerUser = asynchandler(async (req, res) => {
 })
 
 const loginUser = asynchandler(async (req, res) => {
+    console.log("req.body:",req.body);
+    console.log("content-type:",req.headers['content-type']);
     const { email, username, password } = req.body
     
     if (!username && !email || !password) {
@@ -111,7 +115,7 @@ const loginUser = asynchandler(async (req, res) => {
         throw new ApiError(401, "password is incorrect");
     }
   
-    const { accessToken, refreshToken } = await generateAccessandrefereshtokens(userres._id)
+    const { accesstoken, refreshtoken } = await generateAccessandrefereshtokens(userres._id)
     
     const loggedinuser = await User.findById(userres._id).select("-password")
     
@@ -122,38 +126,55 @@ const loginUser = asynchandler(async (req, res) => {
     
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options) 
-        .cookie("refreshToken", refreshToken, options)  // ← Typo was refreshtoken
+        .cookie("accessToken", accesstoken, options) 
+        .cookie("refreshToken", refreshtoken, options)  // ← Typo was refreshtoken
         .json(
             new ApiResponse(200, {
                 user: loggedinuser, 
-                accessToken, 
-                refreshToken
+                accesstoken, 
+                refreshtoken
             }, "user logged in successfully")
         )
 })
 
-const logoutUser = asynchandler(async (res, req) => {
-    await User.findByIdAndUpdate(
-        req.user._id, {
-        $set: {
-            refreshToken: undefined
-        }
-    },
-        {
-            new: true
-        }
-    )
-    const options = {
-        httpOly: true,
-        secure: true
+const logoutUser = asynchandler(async (req, res) => {  
+    let userId;
+    
+    let token = req.cookies?.accessToken;
+    if (token && token.includes('accessToken=')) {
+        token = token.split('=')[1];
     }
+    if (!token) {
+        token = req.header("Authorization")?.replace("Bearer ", "");
+    }
+    
+    if (!token) {
+        return res.status(401).json(new ApiResponse(401, {}, "No access token"));
+    }
+    
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    userId = decoded._id;
+    
+    await User.findByIdAndUpdate(
+        userId,
+        {
+            $set: { refreshToken: null }
+        },
+        { new: true }
+    );
+    
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production"
+    };
+    
     return res
-    .status(200)
-    .coverCookie("accessToken",options)
-    .coverCookie("refreshToken",options)
-    .json(new ApiResponse(200,{
-    },"user logged out"))
-})
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(
+            new ApiResponse(200, {}, "User logged out successfully")
+        );
+});
 
 export { registerUser, loginUser, logoutUser }
