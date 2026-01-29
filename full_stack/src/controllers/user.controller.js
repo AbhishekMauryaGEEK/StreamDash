@@ -5,6 +5,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
 import jwt from "jsonwebtoken";
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
+import { error } from "console";
 const generateAccessandrefereshtokens = async (userId) => {
     try {
         const user = await User.findById(userId);
@@ -212,18 +213,83 @@ try {
     throw new ApiError(401, error?.message || "Invalid refresh token");
 }
 const changecurrentpassword = asynchandler(async (req, res) => {
-    const { oldpassword, newpassword,confpassword } = await req.body;
-    if(!(newpassword===confpassword)){
-        
+    const { oldpassword, newpassword, confpassword } = await req.body;
+    if (!(newpassword === confpassword)) {
+
     }
     const user = await User.findById(req.user?.id)
     const ispasswordcorrect = await user.isPasswordCorrect(oldpassword)
-    if(!ispasswordcorrect){
-        throw new ApiError(400,"invalid password")
+    if (!ispasswordcorrect) {
+        throw new ApiError(400, "invalid password")
     }
-    user.password=newpassword;
-    await user.save({validateBeforeSave:false})
+    user.password = newpassword;
+    await user.save({ validateBeforeSave: false })
     return res.sttatus(200)
-    .json(new ApiResponse(200,{},"password change succesfully"))
+        .json(new ApiResponse(200, {}, "password change succesfully"))
 })
-export { registerUser, loginUser, logoutUser, refreshaccessToken }
+const getcurrentuser = asynchandler(async (res, req) => {
+    return res.status(200).json(200, req.user, "currently user fetched succesfult")
+
+})
+const updateaccount = asynchandler(async (req, res) => {
+    const { fullName, email } = req.body
+    if (!fullName || !email) {
+        throw new ApiError(400, "All feild are  required")
+    }
+    const user = User.findByIdAndUpdate(req.user?._id,
+        {
+            $set: {
+                fullName,
+                email: email
+            }
+        },
+        { new: true }).select("-password")
+
+        return res.
+        status(200).
+        json(new ApiResponse(200, user, "Account details update succesfuly"))
+})
+const updateavatar =asynchandler(async(res,req)=>{
+    const avatarpathlocal= await req.files?.path
+    if(!avatarpathlocal){
+        throw new ApiError(400,"Avatar file is missing")
+    }
+    const avatarpathcloud=await uploadToCloudinary(avatarpathlocal);
+    if(!avatarpathcloud.url){
+        throw new ApiError(400,"Error while uploading on avatar");
+    }
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                avatar:avatarpathcloud.url
+            }
+        },
+        {new:true}
+    ).select("-password")
+    return res.
+    status(200).
+    json(new ApiResponse(200,user,""))
+})
+const updatecoverimage=asynchandler(async(res,req)=>{
+    const coverpathlocal=await req.files?.path
+    if(!coverpathlocal){
+        throw new ApiError(400,"Cover image was not found")
+    }
+    const coverimagecloud=await uploadToCloudinary(coverpathlocal);
+    if(!coverimagecloud.url){
+        throw new ApiError(400,"Error while uploading  the coverimage")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                coverImage:coverimagecloud.url
+            }
+        },{new:true}
+    ).select("-password")
+    return res
+    .status(200)
+    .json(new ApiResponse(200,user,""))
+})
+export { registerUser, loginUser, logoutUser, refreshaccessToken, changecurrentpassword, getcurrentuser ,updateaccount,updateavatar,updatecoverimage}
