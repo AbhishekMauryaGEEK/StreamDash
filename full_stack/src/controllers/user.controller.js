@@ -245,51 +245,61 @@ const updateaccount = asynchandler(async (req, res) => {
         },
         { new: true }).select("-password")
 
-        return res.
+    return res.
         status(200).
         json(new ApiResponse(200, user, "Account details update succesfuly"))
 })
-const updateavatar =asynchandler(async(res,req)=>{
-    const avatarpathlocal= await req.files?.path
-    if(!avatarpathlocal){
-        throw new ApiError(400,"Avatar file is missing")
+const updateavatar = asynchandler(async (res, req) => {
+    const avatarpathlocal = await req.files?.path
+    if (!avatarpathlocal) {
+        throw new ApiError(400, "Avatar file is missing")
     }
-    const avatarpathcloud=await uploadToCloudinary(avatarpathlocal);
-    if(!avatarpathcloud.url){
-        throw new ApiError(400,"Error while uploading on avatar");
-    }
-    const user=await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set:{
-                avatar:avatarpathcloud.url
-            }
-        },
-        {new:true}
-    ).select("-password")
-    return res.
-    status(200).
-    json(new ApiResponse(200,user,""))
-})
-const updatecoverimage=asynchandler(async(res,req)=>{
-    const coverpathlocal=await req.files?.path
-    if(!coverpathlocal){
-        throw new ApiError(400,"Cover image was not found")
-    }
-    const coverimagecloud=await uploadToCloudinary(coverpathlocal);
-    if(!coverimagecloud.url){
-        throw new ApiError(400,"Error while uploading  the coverimage")
+    const avatarpathcloud = await uploadToCloudinary(avatarpathlocal);
+    if (!avatarpathcloud.url) {
+        throw new ApiError(400, "Error while uploading on avatar");
     }
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set:{
-                coverImage:coverimagecloud.url
+            $set: {
+                avatar: avatarpathcloud.url
             }
-        },{new:true}
+        },
+        { new: true }
+    ).select("-password")
+    return res.
+        status(200).
+        json(new ApiResponse(200, user, ""))
+})
+const updatecoverimage = asynchandler(async (res, req) => {
+    const coverpathlocal = await req.files?.path
+    if (!coverpathlocal) {
+        throw new ApiError(400, "Cover image was not found")
+    }
+    const coverimagecloud = await uploadToCloudinary(coverpathlocal);
+    if (!coverimagecloud.url) {
+        throw new ApiError(400, "Error while uploading  the coverimage")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverImage: coverimagecloud.url
+            }
+        }, { new: true }
     ).select("-password")
     return res
-    .status(200)
-    .json(new ApiResponse(200,user,""))
+        .status(200)
+        .json(new ApiResponse(200, user, ""))
 })
-export { registerUser, loginUser, logoutUser, refreshaccessToken, changecurrentpassword, getcurrentuser ,updateaccount,updateavatar,updatecoverimage}
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshaccessToken,
+    changecurrentpassword,
+    getcurrentuser,
+    updateaccount,
+    updateavatar,
+    updatecoverimage
+}
