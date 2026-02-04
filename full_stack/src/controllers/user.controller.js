@@ -292,6 +292,9 @@ const updatecoverimage = asynchandler(async (res, req) => {
         .status(200)
         .json(new ApiResponse(200, user, ""))
 })
+const getUserProfile =asynchandler(async(req,res)=>{
+
+})
 export {
     registerUser,
     loginUser,
@@ -301,5 +304,6 @@ export {
     getcurrentuser,
     updateaccount,
     updateavatar,
-    updatecoverimage
+    updatecoverimage,
+    getUserProfile
 }
