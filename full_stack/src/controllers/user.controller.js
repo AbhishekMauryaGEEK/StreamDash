@@ -215,7 +215,7 @@ try {
 const changecurrentpassword = asynchandler(async (req, res) => {
     const { oldpassword, newpassword, confpassword } = await req.body;
     if (!(newpassword === confpassword)) {
-
+       throw new ApiError(401,"password is invalid  ")
     }
     const user = await User.findById(req.user?.id)
     const ispasswordcorrect = await user.isPasswordCorrect(oldpassword)
@@ -236,7 +236,7 @@ const updateaccount = asynchandler(async (req, res) => {
     if (!fullName || !email) {
         throw new ApiError(400, "All feild are  required")
     }
-    const user = User.findByIdAndUpdate(req.user?._id,
+    const user =  await User.findByIdAndUpdate(req.user?._id,
         {
             $set: {
                 fullName,
