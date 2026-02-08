@@ -227,7 +227,7 @@ const changecurrentpassword = asynchandler(async (req, res) => {
     return res.sttatus(200)
         .json(new ApiResponse(200, {}, "password change succesfully"))
 })
-const getcurrentuser = asynchandler(async (res, req) => {
+const getcurrentuser = asynchandler(async (req, res) => {
     return res.status(200).json(200, req.user, "currently user fetched succesfult")
 
 })
@@ -249,8 +249,8 @@ const updateaccount = asynchandler(async (req, res) => {
         status(200).
         json(new ApiResponse(200, user, "Account details update succesfuly"))
 })
-const updateavatar = asynchandler(async (res, req) => {
-    const avatarpathlocal = await req.files?.path
+const updateavatar = asynchandler(async (req, res) => {
+    const avatarpathlocal = await req.file?.path
     if (!avatarpathlocal) {
         throw new ApiError(400, "Avatar file is missing")
     }
@@ -271,8 +271,8 @@ const updateavatar = asynchandler(async (res, req) => {
         status(200).
         json(new ApiResponse(200, user, ""))
 })
-const updatecoverimage = asynchandler(async (res, req) => {
-    const coverpathlocal = await req.files?.path
+const updatecoverimage = asynchandler(async (req, res) => {
+    const coverpathlocal = await req.file?.path
     if (!coverpathlocal) {
         throw new ApiError(400, "Cover image was not found")
     }
@@ -293,6 +293,8 @@ const updatecoverimage = asynchandler(async (res, req) => {
         .json(new ApiResponse(200, user, ""))
 })
 const getUserProfile =asynchandler(async(req,res)=>{
+    const User= await  req.user._id;
+    
 
 })
 export {
