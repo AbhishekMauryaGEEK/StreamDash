@@ -23,5 +23,6 @@ router.route('/update-avatar').patch(verifyJWT,upload.single('avatar'),updateava
 router.route('/update-cover-image').patch(verifyJWT,upload.single('coverImage'),updatecoverimage);
 router.route('getuser').get(verifyJWT,getUserProfile);
 router.route('/update-user').patch(verifyJWT, updateaccount)
+router.route('/getuserprofile').get(verifyJWT,)
 console.log("User Routes File Loaded!");
 export default router

@@ -1,6 +1,7 @@
 import { asynchandler } from "../utiles/asynchandler.js";
 import { ApiError } from "../utiles/APIerror.js";
 import { User } from "../models/user.model.js"
+import { Subription } from "../models/Subscription.model.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
 import jwt from "jsonwebtoken";
@@ -293,9 +294,65 @@ const updatecoverimage = asynchandler(async (req, res) => {
         .json(new ApiResponse(200, user, ""))
 })
 const getUserProfile =asynchandler(async(req,res)=>{
-    const User= await  req.user._id;
-    
-
+    const {username}=await req.parmas
+    if(!username?.trim()){
+        throw new ApiError(400,"username is missing")
+    }
+    const  channel =await User.aggregate([
+        {
+            $match:{
+                username:username.toLowerCase()
+            } 
+        },{
+            $lookup:{
+                from:"subscription",
+                localfeild:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+            }
+        },{
+            $lookup:{
+                from:"subscription",
+                localfeild:"_id",
+                foreignField:"subcriber",
+                as:"subscribedTo"
+            }
+        },
+        {
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelsSubscribedtoCount:{
+                    $size:"$subscribedTo"
+                },
+                isSuscribed:{
+                    $cond:{
+                        if:{
+                            $in :[req.user?.id,"$subscribers.subscriber"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },{
+            $project:{
+                fullname:1,
+                username:1,
+                subscribersCount:1,
+                channelsSubscribedtoCount:1,
+                isSuscribed:1,
+                avatar:1,
+                coverImage:1,
+                email:1 
+            }
+        }
+    ])
+    if(!channel?.length){
+        throw new ApiError(404,"channel does not exist in the database")
+    }
+    return res.status(200).json(new ApiResponse(200,channel[0],"User channel fetched successfully"))
 })
 export {
     registerUser,
