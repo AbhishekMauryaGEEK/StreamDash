@@ -114,7 +114,7 @@ const loginUser = asynchandler(async (req, res) => {
     const passres = await userres.isPasswordCorrect(password)  // ← userres!
 
     // Logic was backwards  
-    if (!passres) {  // ← NOT passres
+    if (!passres) { 
         throw new ApiError(401, "password is incorrect");
     }
 
@@ -130,7 +130,7 @@ const loginUser = asynchandler(async (req, res) => {
     return res
         .status(200)
         .cookie("accessToken", accesstoken, options)
-        .cookie("refreshToken", refreshtoken, options)  // ← Typo was refreshtoken
+        .cookie("refreshToken", refreshtoken, options) 
         .json(
             new ApiResponse(200, {
                 user: loggedinuser,
@@ -234,7 +234,7 @@ const refreshaccessToken = asynchandler(async (req, res) => {
             );
 
     } catch (error) {
-        console.log("❌ CRITICAL ERROR:", error.message); // See the real error
+        console.log(" CRITICAL ERROR:", error.message); // See the real error
         throw new ApiError(401, error?.message || "Invalid refresh token");
     }
 });
