@@ -1,7 +1,7 @@
 import { asynchandler } from "../utiles/asynchandler.js";
 import { ApiError } from "../utiles/APIerror.js";
 import { User } from "../models/user.model.js"
-import { Subription } from "../models/Subscription.model.js";
+import { Subscription } from "../models/Subscription.model.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { ApiResponse } from "../utiles/Apiresponse.js";
 import jwt from "jsonwebtoken";
@@ -178,45 +178,69 @@ const logoutUser = asynchandler(async (req, res) => {
             new ApiResponse(200, {}, "User logged out successfully")
         );
 });
-try {
-    const refreshaccessToken = asynchandler(async (req, res) => {
-        const incomingrefreshtoken = await req.cookies.refereshtoken || req.body.refereshtoken
-        if (!incomingrefreshtoken) {
-            throw new ApiError(401, "Unauthrorized request")
-        }
-        const decodedtoken = jwt.verify(incomingrefreshtoken, process.env.REFRESH_TOKEN_SECRET)
-        const user = await User.findById(decodedtoken?._id)
+const refreshaccessToken = asynchandler(async (req, res) => {
+    // 1. Grab potential tokens
+    const cookieToken = req.cookies?.refreshToken;
+    const bodyToken = req.body?.refreshToken;
+
+    // 2. DEBUG LOGS (This will show us the truth)
+    console.log(" === REFRESH DEBUGGER ===");
+    console.log("Cookie Token:", cookieToken ? "Present" : "Missing");
+    console.log("Body Token:", bodyToken);
+    console.log("Secret Loaded?", process.env.REFRESH_TOKEN_SECRET ? "YES" : "NO");
+
+    const incomingrefreshtoken = req.body?.refreshToken || req.cookies?.refreshToken;
+
+    if (!incomingrefreshtoken) {
+        throw new ApiError(401, "Unauthorized request: No token found");
+    }
+
+    try {
+        // 3. Verify
+        const decodedtoken = jwt.verify(
+            incomingrefreshtoken,
+            process.env.REFRESH_TOKEN_SECRET
+        );
+
+        console.log("✅ Token Verified! User ID:", decodedtoken?._id);
+
+        const user = await User.findById(decodedtoken?._id);
         if (!user) {
-            throw new ApiError(401, "Invalid refresh token")
+            throw new ApiError(401, "Invalid refresh token");
         }
+
         if (incomingrefreshtoken !== user?.refreshToken) {
-            throw new ApiError(401, "Refresh token is expired or used")
+            throw new ApiError(401, "Refresh token is expired or used");
         }
+
         const options = {
             httpOnly: true,
             secure: true
         }
-        const { accesstoken, newrefereshtoken } = await
-            generateAccessandrefereshtokens(user._id)
+
+        const { accesstoken, refereshtoken } = await generateAccessandrefereshtokens(user._id);
+
         return res
             .status(200)
             .cookie("accessToken", accesstoken, options)
-            .cookie("refreshToken", newrefereshtoken, options)
+            .cookie("refreshToken", refereshtoken, options)
             .json(
                 new ApiResponse(
-                    200, {
-                    accesstoken, refreshToken: newrefereshtoken
-                }, "Access token Refreshed"
+                    200,
+                    { accesstoken, refreshToken: refereshtoken },
+                    "Access token Refreshed"
                 )
-            )
-    })
-} catch (error) {
-    throw new ApiError(401, error?.message || "Invalid refresh token");
-}
+            );
+
+    } catch (error) {
+        console.log("❌ CRITICAL ERROR:", error.message); // See the real error
+        throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
+});
 const changecurrentpassword = asynchandler(async (req, res) => {
     const { oldpassword, newpassword, confpassword } = await req.body;
     if (!(newpassword === confpassword)) {
-       throw new ApiError(401,"password is invalid  ")
+        throw new ApiError(401, "password is invalid  ")
     }
     const user = await User.findById(req.user?.id)
     const ispasswordcorrect = await user.isPasswordCorrect(oldpassword)
@@ -225,7 +249,7 @@ const changecurrentpassword = asynchandler(async (req, res) => {
     }
     user.password = newpassword;
     await user.save({ validateBeforeSave: false })
-    return res.sttatus(200)
+    return res.status(200)
         .json(new ApiResponse(200, {}, "password change succesfully"))
 })
 const getcurrentuser = asynchandler(async (req, res) => {
@@ -237,7 +261,7 @@ const updateaccount = asynchandler(async (req, res) => {
     if (!fullName || !email) {
         throw new ApiError(400, "All feild are  required")
     }
-    const user =  await User.findByIdAndUpdate(req.user?._id,
+    const user = await User.findByIdAndUpdate(req.user?._id,
         {
             $set: {
                 fullName,
@@ -256,14 +280,14 @@ const updateavatar = asynchandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is missing")
     }
     const avatarpathcloud = await uploadToCloudinary(avatarpathlocal);
-    if (!avatarpathcloud.url) {
+    if (!avatarpathcloud) {
         throw new ApiError(400, "Error while uploading on avatar");
     }
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatarpathcloud.url
+                avatar: avatarpathcloud
             }
         },
         { new: true }
@@ -278,14 +302,14 @@ const updatecoverimage = asynchandler(async (req, res) => {
         throw new ApiError(400, "Cover image was not found")
     }
     const coverimagecloud = await uploadToCloudinary(coverpathlocal);
-    if (!coverimagecloud.url) {
+    if (!coverimagecloud) {
         throw new ApiError(400, "Error while uploading  the coverimage")
     }
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                coverImage: coverimagecloud.url
+                coverImage: coverimagecloud
             }
         }, { new: true }
     ).select("-password")
@@ -293,67 +317,125 @@ const updatecoverimage = asynchandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, user, ""))
 })
-const getUserProfile =asynchandler(async(req,res)=>{
-    const {username}=await req.parmas
-    if(!username?.trim()){
-        throw new ApiError(400,"username is missing")
+const getUserProfile = asynchandler(async (req, res) => {
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new ApiError(400, "username is missing")
     }
-    const  channel =await User.aggregate([
+    const channel = await User.aggregate([
         {
-            $match:{
-                username:username.toLowerCase()
-            } 
-        },{
-            $lookup:{
-                from:"subscription",
-                localfeild:"_id",
-                foreignField:"channel",
-                as:"subscribers"
+            $match: {
+                username: username.toLowerCase()
             }
-        },{
-            $lookup:{
-                from:"subscription",
-                localfeild:"_id",
-                foreignField:"subcriber",
-                as:"subscribedTo"
+        }, {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        }, {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
             }
         },
         {
-            $addFields:{
-                subscribersCount:{
-                    $size:"$subscribers"
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
                 },
-                channelsSubscribedtoCount:{
-                    $size:"$subscribedTo"
+                channelsSubscribedtoCount: {
+                    $size: "$subscribedTo"
                 },
-                isSuscribed:{
-                    $cond:{
-                        if:{
-                            $in :[req.user?.id,"$subscribers.subscriber"]
+                isSuscribed: {
+                    $cond: {
+                        if: {
+                            $in: [req.user?.id, "$subscribers.subscriber"]
                         },
-                        then:true,
-                        else:false
+                        then: true,
+                        else: false
                     }
                 }
             }
-        },{
-            $project:{
-                fullname:1,
-                username:1,
-                subscribersCount:1,
-                channelsSubscribedtoCount:1,
-                isSuscribed:1,
-                avatar:1,
-                coverImage:1,
-                email:1 
+        }, {
+            $project: {
+                fullname: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelsSubscribedtoCount: 1,
+                isSuscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
             }
         }
     ])
-    if(!channel?.length){
-        throw new ApiError(404,"channel does not exist in the database")
+    if (!channel?.length) {
+        throw new ApiError(404, "channel does not exist in the database")
     }
-    return res.status(200).json(new ApiResponse(200,channel[0],"User channel fetched successfully"))
+    return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"))
 })
+const forgetpassword = asynchandler(async (req, res) => {
+    const {email} = req.body;
+    if (!email) {
+        throw new ApiError(404, "Email not found")
+    }
+    const user = await User.findOne({email})
+    if(!user){
+        throw new ApiError(404,"User not found with  the email")
+    }
+    const otp = Math.floor(100000 * Math.random() * 90000);
+    user.resetPasswordOTP = otp;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+    try{
+        await sendEmail({
+            email:user.email,
+            subject:"Your password RESET OTP",
+            message: `your OTP is ${otp}. IT expires in 10 minutes.`
+        })
+        console.log(`Currently acting  email ,OTP fro ${email}:${otp}`);
+    }
+    catch(error){
+        //if email failes ,clear  the otp  feild  so user  can  try  again cleanly
+        user.resetPasswordOTP=undefined;
+        user.resetPasswordExpires=undefined;
+        await user.save({validateBeforeSave:false});
+        throw new ApiError(500,"FAILED to  send  email, system error  please try again.")
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(200,{},"Otp sent  to your  email successfully"))
+})
+const resetpassword = asynchandler(async (req, res) => {
+    const {email,otp,newPassword,confirmpassword}=req.body;
+    if(!email||!otp||!newPassword){
+        throw new ApiError(400,"All feild are required");
+    }
+    if(newPassword!==confirmpassword){
+        throw new ApiError(400,"Password  do not match ")
+    }
+    const  user =await User.findOne({email});
+    if(!user){
+        throw new ApiError(400,"User not found");
+    }
+    if(user.resetPasswordOTP!=otp){
+        throw new ApiError(400,"Invalid OTP");
+    }
+    if(user.resetPasswordExpires<Date.now()){
+        throw new ApiError(400,"OTP has expired.Plese request a new one")
+    }
+    user.password=newPassword;
+    user.resetPasswordOTP=undefined;
+    user.resetPasswordExpires=undefined;
+    await user.save();
+    return res
+    .status(200)
+    .json(new ApiResponse(200,{},"Password reset successfuly.You can now go to login."))
+});
 export {
     registerUser,
     loginUser,
@@ -364,5 +446,7 @@ export {
     updateaccount,
     updateavatar,
     updatecoverimage,
-    getUserProfile
+    getUserProfile,
+    forgetpassword,
+    resetpassword
 }
