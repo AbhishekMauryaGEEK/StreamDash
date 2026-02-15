@@ -7,6 +7,7 @@ import { ApiResponse } from "../utiles/Apiresponse.js";
 import jwt from "jsonwebtoken";
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
 import { error } from "console";
+import { sendEmail } from "../utiles/sendEmail.js";
 const generateAccessandrefereshtokens = async (userId) => {
     try {
         const user = await User.findById(userId);
@@ -411,11 +412,11 @@ const forgetpassword = asynchandler(async (req, res) => {
     .json(new ApiResponse(200,{},"Otp sent  to your  email successfully"))
 })
 const resetpassword = asynchandler(async (req, res) => {
-    const {email,otp,newPassword,confirmpassword}=req.body;
+    const {email,otp,newPassword,confirmPassword}=req.body;
     if(!email||!otp||!newPassword){
         throw new ApiError(400,"All feild are required");
     }
-    if(newPassword!==confirmpassword){
+    if(newPassword!==confirmPassword){
         throw new ApiError(400,"Password  do not match ")
     }
     const  user =await User.findOne({email});
