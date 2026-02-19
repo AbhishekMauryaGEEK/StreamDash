@@ -1,13 +1,12 @@
-import { asyncHandler } from "../utils/asyncHandler.js"; 
+import { ApiResponse } from "../utiles/ApiResponse.js";
+import { ApiError } from "../utiles/APIerror.js";
+import { asynchandler } from "../utiles/asynchandler.js";
 import { Subscription } from "../models/subscription.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose, { isValidObjectId } from "mongoose";
-const toggleSubscription = asyncHandler(async (req, res) => {
+const toggleSubscription = asynchandler(async (req, res) => {
     const { channelId } = req.params;
 
-    if (!isValidObjectId(channelId)) {
-        throw new ApiError(400, "Invalid Channel ID");
-    }
+  
 
     // Security Check: Prevent self-subscription
     if (channelId.toString() === req.user?._id.toString()) {
@@ -36,17 +35,14 @@ const toggleSubscription = asyncHandler(async (req, res) => {
             .json(new ApiResponse(200, { subscribed: true }, "Subscribed successfully"));
     }
 });
-const getUserChannelSubscribers = asyncHandler(async (req, res) => {
+const getUserChannelSubscribers = asynchandler(async (req, res) => {
     const { channelId } = req.params;
 
-    if (!isValidObjectId(channelId)) {
-        throw new ApiError(400, "Invalid Channel ID");
-    }
-
+   
     const subscribers = await Subscription.aggregate([
         {
             $match: {
-                channel: new mongoose.Types.ObjectId(channelId), 
+                channel: channelId, 
             },
         },
         {
@@ -81,17 +77,15 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             )
         );
 });
-const getSubscribedChannels = asyncHandler(async (req, res) => { 
+const getSubscribedChannels = asynchandler(async (req, res) => { 
     const { subscriberId } = req.params; 
 
-    if (!isValidObjectId(subscriberId)) {
-        throw new ApiError(400, "Invalid Subscriber ID");
-    }
+  
 
     const subscribedChannels = await Subscription.aggregate([
         {
             $match: {
-                subscriber: new mongoose.Types.ObjectId(subscriberId), 
+                subscriber: subscriberId,
             },
         },
         {

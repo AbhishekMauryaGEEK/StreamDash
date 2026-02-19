@@ -1,1 +1,1 @@
-# ths is a full stack proect 
+# ths is a full stack project 

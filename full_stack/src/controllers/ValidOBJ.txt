@@ -1,0 +1,5 @@
+  if (!isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid Channel ID");
+    }
+
+    //Add in all subscription  routes for security  purspose after testing

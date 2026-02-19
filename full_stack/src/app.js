@@ -25,7 +25,10 @@ app.use((error,req, res, next) => {
     next();
 })
 import router from "./routes/user.routes.js";
+import router2 from "./routes/Subscriber.route.js";
+
 app.use("/api/v1/users",router)
+app.use("/api/v1/subscriptions",router2)
 // Add this AFTER all your routes
 app.use((error, req, res, next) => {
     if (error instanceof multer.MulterError) {
