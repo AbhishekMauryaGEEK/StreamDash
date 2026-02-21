@@ -2,11 +2,8 @@ import { ApiResponse } from "../utiles/ApiResponse.js";
 import { ApiError } from "../utiles/APIerror.js";
 import { asynchandler } from "../utiles/asynchandler.js";
 import { User } from "../models/user.model.js"
-import { Subscription } from "../models/subscription.model.js";
-import { upload } from "../middlewares/multer.middleware.js";
 import jwt from "jsonwebtoken";
 import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
-import { error } from "console";
 import { sendEmail } from "../utiles/sendEmail.js";
 const generateAccessandrefereshtokens = async (userId) => {
     try {
