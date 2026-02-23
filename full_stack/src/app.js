@@ -24,11 +24,15 @@ app.use((error,req, res, next) => {
     console.log("---------------------");
     next();
 })
-import router from "./routes/user.routes.js";
-import router2 from "./routes/Subscriber.route.js";
+import userRouter from "./routes/user.routes.js";
+import subscriptionRouter from "./routes/Subscriber.route.js";
+import videoRouter from "./routes/video.routes.js";
+import likeRouter from "./routes/like.routes.js";
 
-app.use("/api/v1/users",router)
-app.use("/api/v1/subscriptions",router2)
+app.use("/api/v1/users",userRouter)
+app.use("/api/v1/subscriptions",subscriptionRouter)
+app.use("/api/v1/videos",videoRouter)
+app.use("/api/v1/likes", likeRouter);
 // Add this AFTER all your routes
 app.use((error, req, res, next) => {
     if (error instanceof multer.MulterError) {

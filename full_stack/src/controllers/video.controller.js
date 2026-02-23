@@ -3,11 +3,11 @@ import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asynchandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // 1. Get All Videos (with Search, Sort, and Pagination)
-const getAllVideos = asyncHandler(async (req, res) => {
+const getAllVideos = asynchandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
     
     const pipeline = [];
@@ -85,7 +85,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 });
 
 // 2. Publish a Video
-const publishAVideo = asyncHandler(async (req, res) => {
+const publishAVideo =  asynchandler(async (req, res) => {
     const { title, description } = req.body;
 
     if ([title, description].some((field) => field?.trim() === "")) {
@@ -119,7 +119,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 });
 
 // 3. Get Video By ID
-const getVideoById = asyncHandler(async (req, res) => {
+const getVideoById =  asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId).populate("owner", "username avatar");

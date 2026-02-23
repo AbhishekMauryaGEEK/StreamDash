@@ -12,9 +12,9 @@
 //     }
 // }
 
-const asyncHandler = (requesthandler) => {
+const asynchandler = (requesthandler) => {
     return (req, res, next) => { // FIXED
         Promise.resolve(requesthandler(req, res, next)).catch((err) => next(err))
     }
 }
-export { asyncHandler }
+export { asynchandler }

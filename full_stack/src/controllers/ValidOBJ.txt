@@ -2,4 +2,4 @@
         throw new ApiError(400, "Invalid Channel ID");
     }
 
-    //Add in all subscription  routes for security  purspose after testing
+    //Add in all controller  for security  purspose after testing
