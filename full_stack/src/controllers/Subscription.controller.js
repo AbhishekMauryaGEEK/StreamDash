@@ -6,15 +6,13 @@ import mongoose, { isValidObjectId } from "mongoose";
 const toggleSubscription = asynchandler(async (req, res) => {
     const { channelId } = req.params;
 
-  
-
     // Security Check: Prevent self-subscription
     if (channelId.toString() === req.user?._id.toString()) {
         throw new ApiError(400, "You cannot subscribe to your own channel");
     }
 
     const subscription = await Subscription.findOne({
-        subscriber: req.user?._id, 
+        subscriber: req.user?._id,
         channel: channelId,
     });
 
@@ -38,17 +36,17 @@ const toggleSubscription = asynchandler(async (req, res) => {
 const getUserChannelSubscribers = asynchandler(async (req, res) => {
     const { channelId } = req.params;
 
-   
+
     const subscribers = await Subscription.aggregate([
         {
             $match: {
-                channel: channelId, 
+                channel: channelId,
             },
         },
         {
             $lookup: {
                 from: "users",
-                localField: "subscriber", 
+                localField: "subscriber",
                 foreignField: "_id",
                 as: "subscriberDetails",
             },
@@ -72,15 +70,15 @@ const getUserChannelSubscribers = asynchandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { count: subscribers.length, subscribers }, 
+                { count: subscribers.length, subscribers },
                 "Subscribers fetched successfully"
             )
         );
 });
-const getSubscribedChannels = asynchandler(async (req, res) => { 
-    const { subscriberId } = req.params; 
+const getSubscribedChannels = asynchandler(async (req, res) => {
+    const { subscriberId } = req.params;
 
-  
+
 
     const subscribedChannels = await Subscription.aggregate([
         {
