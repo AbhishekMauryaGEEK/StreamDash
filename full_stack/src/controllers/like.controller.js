@@ -1,7 +1,7 @@
 import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asynchandler } from "../utils/asynchandler.js";
+import { asynchandler } from "../utils/asyncHandler.js";
 const togglevideolike =asynchandler(async(req,res)=>{
     const{videoId}=req.params;
     const userId=req.user?._id;
@@ -65,7 +65,7 @@ const toggletweetlike =asynchandler(async(req,res)=>{
     .status(200)
     .json(new ApiResponse(200,{isLiked:true},"liked tweet"));
 });
-const getLikedVideos = asyncHandler(async (req, res) => {
+const getLikedVideos = asynchandler(async (req, res) => {
     const userId = req.user?._id;
 
     const likedVideos = await Like.aggregate([
@@ -111,5 +111,6 @@ export {
     togglevideolike,
     toggleCommentLike,
     toggletweetlike,
-    getLikedVideos
+    getLikedVideos,
+    
 }

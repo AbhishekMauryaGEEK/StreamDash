@@ -7,11 +7,11 @@ import {
 } from "../controllers/comment.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = Router();
+const Commentrouter = Router();
 
-router.use(verifyJWT); // All comment routes require login
+Commentrouter.use(verifyJWT); // All comment routes require login
 
-router.route("/:videoId").get(getVideoComments).post(addComment);
-router.route("/c/:commentId").delete(deleteComment).patch(updateComment);
+Commentrouter.route("/:videoId").get(getVideoComments).post(addComment);
+Commentrouter.route("/c/:commentId").delete(deleteComment).patch(updateComment);
 
-export default router;
+export default Commentrouter;

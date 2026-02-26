@@ -4,7 +4,7 @@ import {Subscription} from "../models/Subscription.model.js"
 import {Like} from "../models/like.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import {asynchandler} from "../utils/asyncHandler.js"
 
 const getChannelStats = asynchandler(async (req, res) => {
     const { channelId } = req.params; // This is the user's UUID string
@@ -64,7 +64,7 @@ const getChannelStats = asynchandler(async (req, res) => {
         .json(new ApiResponse(200, stats, "Channel stats fetched successfully"));
 });
 
-const getChannelVideos = asyncHandler(async (req, res) => {
+const getChannelVideos = asynchandler(async (req, res) => {
     const { channelId } = req.params;
 
     const videos = await Video.find({ owner: channelId }).sort({ createdAt: -1 });

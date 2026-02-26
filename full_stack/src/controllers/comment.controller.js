@@ -1,10 +1,10 @@
 import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asynchandler } from "../utils/asyncHandler.js";
 
 // 1. Get all comments for a video (with Pagination)
-const getVideoComments = asyncHandler(async (req, res) => {
+const getVideoComments = asynchandler(async (req, res) => {
     const { videoId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
@@ -42,7 +42,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 // 2. Add a comment to a video
-const addComment = asyncHandler(async (req, res) => {
+const addComment = asynchandler(async (req, res) => {
     const { videoId } = req.params;
     const { content } = req.body;
 
@@ -62,7 +62,7 @@ const addComment = asyncHandler(async (req, res) => {
 });
 
 // 3. Update a comment
-const updateComment = asyncHandler(async (req, res) => {
+const updateComment = asynchandler(async (req, res) => {
     const { commentId } = req.params;
     const { content } = req.body;
 
@@ -91,7 +91,7 @@ const updateComment = asyncHandler(async (req, res) => {
 });
 
 // 4. Delete a comment
-const deleteComment = asyncHandler(async (req, res) => {
+const deleteComment = asynchandler(async (req, res) => {
     const { commentId } = req.params;
 
     const comment = await Comment.findById(commentId);

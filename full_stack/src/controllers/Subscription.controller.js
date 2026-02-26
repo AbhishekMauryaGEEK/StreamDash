@@ -1,6 +1,6 @@
-import { ApiResponse } from "../utiles/ApiResponse.js";
-import { ApiError } from "../utiles/APIerror.js";
-import { asynchandler } from "../utiles/asynchandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asynchandler } from "../utils/asyncHandler.js";
 import { Subscription } from "../models/Subscription.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 const toggleSubscription = asynchandler(async (req, res) => {

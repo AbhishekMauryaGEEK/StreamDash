@@ -3,10 +3,10 @@ import {Tweet} from "../models/tweet.model.js"
 import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import { asynchandler } from "../utils/asyncHandler.js"
 
 // 1. Create Tweet
-const createTweet = asyncHandler(async (req, res) => {
+const createTweet = asynchandler(async (req, res) => {
     const { content } = req.body;
     if (!content) throw new ApiError(400, "Content is required");
 
@@ -19,7 +19,7 @@ const createTweet = asyncHandler(async (req, res) => {
 });
 
 // 2. Get User Tweets
-const getUserTweets = asyncHandler(async (req, res) => {
+const getUserTweets = asynchandler(async (req, res) => {
     const { userId } = req.params;
 
     const tweets = await Tweet.aggregate([
@@ -40,7 +40,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
 });
 
 // 3. Update Tweet
-const updateTweet = asyncHandler(async (req, res) => {
+const updateTweet = asynchandler(async (req, res) => {
     const { tweetId } = req.params;
     const { content } = req.body;
 
@@ -55,7 +55,7 @@ const updateTweet = asyncHandler(async (req, res) => {
 });
 
 // 4. Delete Tweet
-const deleteTweet = asyncHandler(async (req, res) => {
+const deleteTweet = asynchandler(async (req, res) => {
     const { tweetId } = req.params;
     await Tweet.findByIdAndDelete(tweetId);
     return res.status(200).json(new ApiResponse(200, {}, "Tweet deleted"));

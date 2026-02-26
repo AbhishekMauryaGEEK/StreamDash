@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asynchandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { upload as uploadToCloudinary } from "../utils/clouedinary.js";
 
 // 1. Get All Videos (with Search, Sort, and Pagination)
 const getAllVideos = asynchandler(async (req, res) => {
@@ -132,7 +132,7 @@ const getVideoById =  asynchandler(async (req, res) => {
 });
 
 // 4. Update Video Details
-const updateVideo = asyncHandler(async (req, res) => {
+const updateVideo = asynchandler(async (req, res) => {
     const { videoId } = req.params;
     const { title, description } = req.body;
     const thumbnailLocalPath = req.file?.path;
@@ -164,7 +164,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 // 5. Delete Video
-const deleteVideo = asyncHandler(async (req, res) => {
+const deleteVideo = asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId);
@@ -183,7 +183,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 });
 
 // 6. Toggle Publish Status
-const togglePublishStatus = asyncHandler(async (req, res) => {
+const togglePublishStatus = asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
     const video = await Video.findById(videoId);

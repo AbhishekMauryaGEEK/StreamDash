@@ -1,10 +1,10 @@
-import { ApiResponse } from "../utiles/ApiResponse.js";
-import { ApiError } from "../utiles/APIerror.js";
-import { asynchandler } from "../utiles/asynchandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asynchandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js"
 import jwt from "jsonwebtoken";
-import { upload as uploadToCloudinary } from "../utiles/clouedinary.js";
-import { sendEmail } from "../utiles/sendEmail.js";
+import { upload as uploadToCloudinary } from "../utils/clouedinary.js";
+import { sendEmail } from "../utils/sendEmail.js";
 const generateAccessandrefereshtokens = async (userId) => {
     try {
         const user = await User.findById(userId);

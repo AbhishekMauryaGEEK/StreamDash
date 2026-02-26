@@ -1,8 +1,8 @@
-import { userRouter } from "express"
+import { Router } from "express"
 import { upload } from "../middlewares/multer.middleware.js"
 import { loginUser, registerUser, logoutUser, refreshaccessToken, updateaccount,changecurrentpassword,updateavatar,updatecoverimage,getUserProfile, getcurrentuser,forgetpassword, resetpassword } from "../controllers/user.controller.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
-const userRouter = userRouter()
+const userRouter = Router()
 userRouter.route("/register").post(upload.fields([
     {
         name: "avatar",
