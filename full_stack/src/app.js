@@ -14,8 +14,7 @@ app.use(express.json({ limit: "16kb" }))
 app.use(express.urlencoded({ extended: true, limit: "16kb" }))
 app.use(express.static("public"))
 app.use(cookieparser())
-
-app.use((error,req, res, next) => {
+app.use((req, res, next) => {
     console.log("---------------------");
     console.log("INCOMING REQUEST:");
     console.log("METHOD:", req.method);
@@ -33,9 +32,7 @@ import healthcheckRouter from "./routes/healthcheck.routes.js";
 import TweetRouter from "./routes/tweet.routes.js";
 import playlistRouter from "./routes/playlist.routes.js";
 import Commentrouter from "./routes/comment.routes.js";
-
 // Routes Declaration
-
 app.use("/api/v1/users",userRouter)
 app.use("/api/v1/subscriptions",subscriptionRouter)
 app.use("/api/v1/videos",videoRouter)
@@ -43,17 +40,15 @@ app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/healthcheck", healthcheckRouter);
 app.use("/api/v1/tweets", TweetRouter);
-app.use("/api/vi/Comment",Commentrouter);
+app.use("/api/v1/Comment",Commentrouter);
 app.use("/api/v1/playlist", playlistRouter);
-// Add this AFTER all your routes
-app.use((error, req, res, next) => {
+app.use((error,req, res, next) => {
     if (error instanceof multer.MulterError) {
         console.log(' MULTER ERROR FIELD:', error.field);  // This shows the BAD field name
         return res.status(400).json({ error: `Unexpected field: ${error.field}` });
     }
     next(error);
 });
-
 //ex Route: http://localhost:8000/api/v1/users +/register =>
 // http://localhost:8000/api/v1/users/register
 //other examples like  http://localhost:8000/api/v1/users +/login or /help or /credits etc 
