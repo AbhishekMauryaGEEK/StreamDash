@@ -1,1 +1,0 @@
-# ths is a full stack project 

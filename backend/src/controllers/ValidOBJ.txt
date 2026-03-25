@@ -1,5 +1,0 @@
-  if (!isValidObjectId(channelId)) {
-        throw new ApiError(400, "Invalid Channel ID");
-    }
-
-    //Add in all controller  for security  purspose after testing
