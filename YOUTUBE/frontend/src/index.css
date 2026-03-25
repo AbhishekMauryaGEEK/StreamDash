@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* Define your theme variables directly in CSS for v4 */
+@theme {
+  --color-background: #0a0a0a;
+  --color-surface: #121212;
+  --color-border: #222222;
+  --color-primary: #ef4444;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: white;
+  }
+}
