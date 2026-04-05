@@ -9,17 +9,17 @@ const generateAccessandrefereshtokens = async (userId) => {
     try {
         const user = await User.findById(userId);
         const accesstoken = await user.generateAccessToken();
-        const refereshtoken = await user.generateRefreshToken();
-        user.refreshToken = refereshtoken;
-        user.accessToken = accesstoken;
-        await user.save({ validateBeforeSave: false })
-        return { accesstoken, refereshtoken };
+        const refreshtoken = await user.generateRefreshToken(); // 👈 Fixed spelling
+        
+        user.refreshToken = refreshtoken;
+        await user.save({ validateBeforeSave: false });
+        
+        // Fix the return key here:
+        return { accesstoken, refreshtoken }; 
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating tokens");
     }
-    catch (error) {
-        throw new ApiError(500, "something went wrong  while generating refresesh and access token")
-
-    }
-}
+};
 const registerUser = asynchandler(async (req, res) => {
     try {
         //get user details from frontend
@@ -218,21 +218,22 @@ const refreshaccessToken = asynchandler(async (req, res) => {
             throw new ApiError(401, "Refresh token is expired or used");
         }
 
+        
+        const { accesstoken, refreshtoken } = await generateAccessandrefereshtokens(user._id);
+        
         const options = {
             httpOnly: true,
+            secure:process.env.NODE_ENV === "production",
             secure: true
         }
-
-        const { accesstoken, refereshtoken } = await generateAccessandrefereshtokens(user._id);
-
         return res
             .status(200)
             .cookie("accessToken", accesstoken, options)
-            .cookie("refreshToken", refereshtoken, options)
+            .cookie("refreshToken", refreshtoken, options)
             .json(
                 new ApiResponse(
                     200,
-                    { accesstoken, refreshToken: refereshtoken },
+                    { accesstoken: accesstoken, refreshToken: refreshtoken },
                     "Access token Refreshed"
                 )
             );
@@ -278,22 +279,22 @@ const getcurrentuser = asynchandler(async (req, res) => {
         );
 });
 const updateaccount = asynchandler(async (req, res) => {
-    const { fullName, email } = req.body
-    if (!fullName || !email) {
+    const { fullname, email } = req.body
+    if (!fullname || !email) {
         throw new ApiError(400, "All feild are  required")
     }
     const user = await User.findByIdAndUpdate(req.user?._id,
         {
             $set: {
-                fullName,
+                fullname,
                 email: email
             }
         },
         { new: true }).select("-password")
 
-    return res.
-        status(200).
-        json(new ApiResponse(200, user, "Account details update succesfuly"))
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details update succesfuly"))
 })
 const updateavatar = asynchandler(async (req, res) => {
     const avatarpathlocal = await req.file?.path

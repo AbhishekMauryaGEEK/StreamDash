@@ -12,6 +12,8 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import UserProfile from './pages/UserProfile';
 import HomeFeed from './pages/HomeFeed';
+import Settings from './pages/Settings';     
+import ChannelPage from './pages/ChannelPage'; 
 
 export default function App() {
     const { user, loading } = useAuth();
@@ -19,7 +21,7 @@ export default function App() {
 
     if (loading) {
         return (
-            <div className="h-screen w-full bg-background flex items-center justify-center">
+            <div className="h-screen w-full bg-[#0a0a0a] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary"></div>
             </div>
         );
@@ -31,6 +33,7 @@ export default function App() {
                 {!user ? (
                     <>
                         <Route path="/auth" element={<AuthPage />} />
+                        {/* Catch-all for unauthenticated users */}
                         <Route path="*" element={<Navigate to="/auth" replace />} />
                     </>
                 ) : (
@@ -52,6 +55,9 @@ export default function App() {
                                                     </ProtectedRoute>
                                                 } 
                                             />
+                                            {/* 🚨 MOVED THESE HERE SO THEY SHOW WITH SIDEBAR/HEADER */}
+                                            <Route path="/settings" element={<Settings />} />
+                                            <Route path="/c/:username" element={<ChannelPage />} />
                                             <Route path="/auth" element={<Navigate to="/" replace />} />
                                             <Route path="*" element={<Navigate to="/" replace />} />
                                         </Routes>

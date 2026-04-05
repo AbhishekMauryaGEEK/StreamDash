@@ -14,3 +14,8 @@
     color: white;
   }
 }
+.glass-card-hover:hover {
+  border-color: rgba(239, 68, 68, 0.3); /* Matches your primary red */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(239, 68, 68, 0.1);
+  transition: all 0.4s ease;
+}
