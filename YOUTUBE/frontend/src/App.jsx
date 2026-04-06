@@ -55,7 +55,7 @@ export default function App() {
                                                     </ProtectedRoute>
                                                 } 
                                             />
-                                            {/* 🚨 MOVED THESE HERE SO THEY SHOW WITH SIDEBAR/HEADER */}
+                                            {/*  MOVED THESE HERE SO THEY SHOW WITH SIDEBAR/HEADER */}
                                             <Route path="/settings" element={<Settings />} />
                                             <Route path="/c/:username" element={<ChannelPage />} />
                                             <Route path="/auth" element={<Navigate to="/" replace />} />

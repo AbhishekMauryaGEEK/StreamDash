@@ -50,7 +50,7 @@ export default function UserProfile() {
         if (!file) return;
 
         const formData = new FormData();
-        formData.append("coverImage", file); // Must match backend upload.single('coverImage')
+        formData.append("coverImage", file); 
 
         try {
             await api.patch('/users/update-cover-image', formData, {

@@ -92,29 +92,44 @@ const publishAVideo = asynchandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const videoFileLocalPath = req.files?.videoFile[0]?.path;
-    const thumbnailLocalPath = req.files?.thumbnail[0]?.path;
+    const videoFileLocal = req.files?.videoFile?.[0];
+    const thumbnailLocal = req.files?.thumbnail?.[0];
 
-    if (!videoFileLocalPath) throw new ApiError(400, "Video file is required");
-    if (!thumbnailLocalPath) throw new ApiError(400, "Thumbnail is required");
+    if (!videoFileLocal) throw new ApiError(400, "Video file is required");
+    if (!thumbnailLocal) throw new ApiError(400, "Thumbnail is required");
 
+    // 🛡️ SECURITY CHECK: Validate MimeTypes
+    // videoFileLocal.mimetype will be something like "video/mp4" or "video/quicktime"
+    if (!videoFileLocal.mimetype.startsWith("video/")) {
+        throw new ApiError(400, "Invalid format: videoFile must be a video");
+    }
+
+    // thumbnailLocal.mimetype will be "image/jpeg", "image/png", etc.
+    if (!thumbnailLocal.mimetype.startsWith("image/")) {
+        throw new ApiError(400, "Invalid format: thumbnail must be an image");
+    }
+
+    const videoFileLocalPath = videoFileLocal.path;
+    const thumbnailLocalPath = thumbnailLocal.path;
+
+    // Upload to Cloudinary
     const videoFile = await uploadToCloudinary(videoFileLocalPath);
     const thumbnail = await uploadToCloudinary(thumbnailLocalPath);
 
-    // If logs show only a string, don't use .url
-    const videoFileUrl = videoFile?.url || videoFile;
-    const thumbnailUrl = thumbnail?.url || thumbnail;
-    const videoDuration = videoFile?.duration || 0; // If string, duration won't exist
+    if (!videoFile || !thumbnail) {
+        throw new ApiError(500, "Error while uploading files to Cloudinary");
+    }
 
     const video = await Video.create({
         title,
         description,
-        duration: videoDuration, // Set a default if Cloudinary didn't return an object
-        videoFile: videoFileUrl,
-        thumbnail: thumbnailUrl,
+        duration: videoFile?.duration || 0,
+        videoFile: videoFile.url || videoFile,
+        thumbnail: thumbnail.url || thumbnail,
         owner: req.user?._id,
         isPublished: true
     });
+
     return res.status(201).json(
         new ApiResponse(201, video, "Video published successfully")
     );
