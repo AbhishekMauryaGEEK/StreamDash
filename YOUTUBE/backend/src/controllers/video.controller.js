@@ -1,83 +1,97 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asynchandler } from "../utils/asyncHandler.js";
-import { upload as uploadToCloudinary } from "../utils/clouedinary.js";
+//  Import the newly added delete function
+import { upload as uploadToCloudinary, deleteFromCloudinary } from "../utils/clouedinary.js";
 
-// 1. Get All Videos (with Search, Sort, and Pagination)
+// 1. Get All Videos
 const getAllVideos = asynchandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
 
     const pipeline = [];
 
-    // Filter by Title (Exact match as requested, no Regex)
+    // 1. Filter by userId (Channel Page)
+    if (userId) {
+        const matchQuery = isValidObjectId(userId)
+            ? new mongoose.Types.ObjectId(userId)
+            : userId;
+
+        pipeline.push({
+            $match: { owner: matchQuery }
+        });
+    }
+
+    // 2. Filter by Search Query
     if (query) {
         pipeline.push({
-            $match: {
-                title: query
-            }
+            $match: { title: { $regex: query, $options: "i" } }
         });
     }
 
-    // Filter by userId (UUID string match)
-    if (userId) {
-        pipeline.push({
-            $match: {
-                owner: userId
-            }
-        });
+    // 🛡️ 3. SMART PRIVACY LOGIC
+    // We only force videos to be "published" IF:
+    // A) We are on the general Home Feed (no userId provided)
+    // B) We are on a Channel Page, but the logged-in user is NOT the owner
+    if (!userId || (req.user?._id?.toString() !== userId.toString())) {
+        pipeline.push({ $match: { isPublished: true } });
     }
 
-    // Only show published videos
-    pipeline.push({ $match: { isPublished: true } });
-
-    // Sorting logic
-    const sortField = sortBy || "createdAt";
-    const sortOrder = sortType === "asc" ? 1 : -1;
-    pipeline.push({
-        $sort: {
-            [sortField]: sortOrder
-        }
-    });
-
-    // Lookup Owner Details
+    // 4. Get Owner Details
     pipeline.push(
         {
             $lookup: {
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
-                as: "ownerDetails",
+                as: "ownerDetails"
             }
         },
         {
-            $unwind: "$ownerDetails"
-        },
-        {
-            $project: {
-                videoFile: 1,
-                thumbnail: 1,
-                title: 1,
-                description: 1,
-                ownerDetails: {
-                    username: 1,
-                    avatar: 1
-                }
+            $unwind: {
+                path: "$ownerDetails",
+                preserveNullAndEmptyArrays: true
             }
         }
     );
+
+    // 5. Select only the necessary fields
+    pipeline.push({
+        $project: {
+            videoFile: 1,
+            thumbnail: 1,
+            title: 1,
+            description: 1,
+            views: 1,
+            duration: 1,
+            createdAt: 1,
+            isPublished: 1, //  Added this so your frontend knows which ones are private!
+            ownerDetails: {
+                username: 1,
+                avatar: 1,
+                fullname: 1
+            }
+        }
+    });
+
+    // 6. Sorting & Pagination
+    const sortField = sortBy || "createdAt";
+    const sortOrder = sortType === "asc" ? 1 : -1;
+
+    const aggregate = Video.aggregate(pipeline).sort({ [sortField]: sortOrder });
 
     const options = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
     };
 
-    const videoList = await Video.aggregatePaginate(
-        Video.aggregate(pipeline),
-        options
-    );
+    const videoList = await Video.aggregatePaginate(aggregate, options);
+
+    if (!videoList) {
+        throw new ApiError(500, "Error while fetching videos");
+    }
 
     return res
         .status(200)
@@ -98,13 +112,10 @@ const publishAVideo = asynchandler(async (req, res) => {
     if (!videoFileLocal) throw new ApiError(400, "Video file is required");
     if (!thumbnailLocal) throw new ApiError(400, "Thumbnail is required");
 
-    // 🛡️ SECURITY CHECK: Validate MimeTypes
-    // videoFileLocal.mimetype will be something like "video/mp4" or "video/quicktime"
     if (!videoFileLocal.mimetype.startsWith("video/")) {
         throw new ApiError(400, "Invalid format: videoFile must be a video");
     }
 
-    // thumbnailLocal.mimetype will be "image/jpeg", "image/png", etc.
     if (!thumbnailLocal.mimetype.startsWith("image/")) {
         throw new ApiError(400, "Invalid format: thumbnail must be an image");
     }
@@ -112,9 +123,9 @@ const publishAVideo = asynchandler(async (req, res) => {
     const videoFileLocalPath = videoFileLocal.path;
     const thumbnailLocalPath = thumbnailLocal.path;
 
-    // Upload to Cloudinary
-    const videoFile = await uploadToCloudinary(videoFileLocalPath);
-    const thumbnail = await uploadToCloudinary(thumbnailLocalPath);
+    // 📁 Upload to Cloudinary with explicit Folder Names
+    const videoFile = await uploadToCloudinary(videoFileLocalPath, "streamdash/videos");
+    const thumbnail = await uploadToCloudinary(thumbnailLocalPath, "streamdash/thumbnails");
 
     if (!videoFile || !thumbnail) {
         throw new ApiError(500, "Error while uploading files to Cloudinary");
@@ -124,10 +135,11 @@ const publishAVideo = asynchandler(async (req, res) => {
         title,
         description,
         duration: videoFile?.duration || 0,
-        videoFile: videoFile.url || videoFile,
-        thumbnail: thumbnail.url || thumbnail,
+        videoFile: videoFile.url,
+        thumbnail: thumbnail.url,
         owner: req.user?._id,
-        isPublished: true
+        isPublished: true,
+        views: 0
     });
 
     return res.status(201).json(
@@ -139,7 +151,9 @@ const publishAVideo = asynchandler(async (req, res) => {
 const getVideoById = asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
-    const video = await Video.findById(videoId).populate("owner", "username avatar");
+    if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
+
+    const video = await Video.findById(videoId).populate("owner", "username avatar fullname");
 
     if (!video) throw new ApiError(404, "Video not found");
 
@@ -154,19 +168,31 @@ const updateVideo = asynchandler(async (req, res) => {
     const { title, description } = req.body;
     const thumbnailLocalPath = req.file?.path;
 
+    if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
+
     const video = await Video.findById(videoId);
     if (!video) throw new ApiError(404, "Video not found");
 
-    // Ownership Check
     if (video.owner.toString() !== req.user?._id.toString()) {
         throw new ApiError(403, "Unauthorized request");
     }
 
     const updateData = { title, description };
 
+    // 🧹 Replace Thumbnail Logic
     if (thumbnailLocalPath) {
-        const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-        if (thumbnail) updateData.thumbnail = thumbnail.url;
+        const oldThumbnailUrl = video.thumbnail;
+
+        // Upload new thumbnail to the designated folder
+        const newThumbnail = await uploadToCloudinary(thumbnailLocalPath, "streamdash/thumbnails");
+
+        if (newThumbnail) {
+            updateData.thumbnail = newThumbnail.url;
+            // Delete the old thumbnail from Cloudinary to save space
+            await deleteFromCloudinary(oldThumbnailUrl, "image");
+        } else {
+            throw new ApiError(500, "Failed to upload new thumbnail");
+        }
     }
 
     const updatedVideo = await Video.findByIdAndUpdate(
@@ -184,24 +210,31 @@ const updateVideo = asynchandler(async (req, res) => {
 const deleteVideo = asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
+    if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
+
     const video = await Video.findById(videoId);
     if (!video) throw new ApiError(404, "Video not found");
 
-    // Ownership Check
     if (video.owner.toString() !== req.user?._id.toString()) {
         throw new ApiError(403, "Unauthorized request");
     }
 
+    // 🧹 Delete both assets from Cloudinary before wiping the DB record
+    await deleteFromCloudinary(video.videoFile, "video");
+    await deleteFromCloudinary(video.thumbnail, "image");
+
     await Video.findByIdAndDelete(videoId);
 
     return res.status(200).json(
-        new ApiResponse(200, {}, "Video deleted successfully")
+        new ApiResponse(200, {}, "Video and assets deleted successfully")
     );
 });
 
 // 6. Toggle Publish Status
 const togglePublishStatus = asynchandler(async (req, res) => {
     const { videoId } = req.params;
+
+    if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
 
     const video = await Video.findById(videoId);
     if (!video) throw new ApiError(404, "Video not found");
@@ -217,12 +250,11 @@ const togglePublishStatus = asynchandler(async (req, res) => {
         new ApiResponse(200, { isPublished: video.isPublished }, "Status toggled")
     );
 });
-
 export {
     getAllVideos,
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
 };

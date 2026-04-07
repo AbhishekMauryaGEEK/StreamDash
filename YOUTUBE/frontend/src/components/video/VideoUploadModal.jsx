@@ -20,7 +20,7 @@ const VideoUploadModal = ({ onClose }) => {
         const formData = new FormData();
         formData.append("title", title);
         formData.append("description", description);
-        
+
         if (videoFileRef.current?.files[0]) {
             formData.append("videoFile", videoFileRef.current.files[0]);
         } else {
@@ -36,7 +36,6 @@ const VideoUploadModal = ({ onClose }) => {
             setIsUploading(false);
             return;
         }
-
         try {
             const response = await api.post("/videos", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -67,7 +66,7 @@ const VideoUploadModal = ({ onClose }) => {
                 <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
                     <X className="w-6 h-6" />
                 </button>
-                
+
                 <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
                     <UploadCloud className="text-primary" /> Upload Video
                 </h2>
@@ -83,7 +82,7 @@ const VideoUploadModal = ({ onClose }) => {
                                 <span className="text-gray-400">{uploadProgress}%</span>
                             </div>
                             <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/5">
-                                <div 
+                                <div
                                     className="bg-primary h-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(239,68,68,0.4)]"
                                     style={{ width: `${uploadProgress}%` }}
                                 ></div>
@@ -91,41 +90,41 @@ const VideoUploadModal = ({ onClose }) => {
                         </div>
                     )}
 
-                    <input 
-                        type="text" placeholder="Video Title" 
+                    <input
+                        type="text" placeholder="Video Title"
                         value={title} onChange={(e) => setTitle(e.target.value)}
                         required disabled={isUploading}
-                        className="w-full p-4 bg-[#0a0a0a] border border-white/10 rounded-xl text-white outline-none focus:border-primary/50 transition-colors" 
+                        className="w-full p-4 bg-[#0a0a0a] border border-white/10 rounded-xl text-white outline-none focus:border-primary/50 transition-colors"
                     />
-                    
-                    <textarea 
-                        placeholder="Video Description" 
+
+                    <textarea
+                        placeholder="Video Description"
                         value={description} onChange={(e) => setDescription(e.target.value)}
                         required disabled={isUploading}
-                        className="w-full h-32 p-4 bg-[#0a0a0a] border border-white/10 rounded-xl text-white outline-none focus:border-primary/50 transition-colors resize-none" 
+                        className="w-full h-32 p-4 bg-[#0a0a0a] border border-white/10 rounded-xl text-white outline-none focus:border-primary/50 transition-colors resize-none"
                     />
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-xs text-gray-500 ml-1">Video File</label>
-                            <input 
-                                ref={videoFileRef} type="file" accept="video/*" 
+                            <input
+                                ref={videoFileRef} type="file" accept="video/*"
                                 required disabled={isUploading}
-                                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" 
+                                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                             />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs text-gray-500 ml-1">Thumbnail</label>
-                            <input 
-                                ref={thumbnailRef} type="file" accept="image/*" 
+                            <input
+                                ref={thumbnailRef} type="file" accept="image/*"
                                 required disabled={isUploading}
-                                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" 
+                                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                             />
                         </div>
                     </div>
 
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={isUploading}
                         className="w-full p-4 font-bold bg-primary text-white rounded-xl hover:bg-red-600 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
