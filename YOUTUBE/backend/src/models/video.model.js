@@ -16,7 +16,8 @@ const videoSchema = new Schema(
             default: true
         },
         owner: {
-            type: String, // Since you are using UUID strings
+            type: String,
+            ref: "User",// Since you are using UUID strings
             required: true
         }
     },

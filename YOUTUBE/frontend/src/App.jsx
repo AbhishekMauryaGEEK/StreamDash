@@ -14,7 +14,7 @@ import UserProfile from './pages/UserProfile';
 import HomeFeed from './pages/HomeFeed';
 import Settings from './pages/Settings';     
 import ChannelPage from './pages/ChannelPage'; 
-
+import WatchPage from './pages/WatchPage';
 export default function App() {
     const { user, loading } = useAuth();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -56,6 +56,7 @@ export default function App() {
                                                 } 
                                             />
                                             {/*  MOVED THESE HERE SO THEY SHOW WITH SIDEBAR/HEADER */}
+                                            <Route path="/watch/:videoId" element={<WatchPage />} />
                                             <Route path="/settings" element={<Settings />} />
                                             <Route path="/c/:username" element={<ChannelPage />} />
                                             <Route path="/auth" element={<Navigate to="/" replace />} />
