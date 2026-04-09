@@ -72,7 +72,7 @@ const registerUser = asynchandler(async (req, res) => {
 
         const userdata = await User.create({
             fullname,
-            avatar: avatar,
+            avatar: avatar.url,
             coverImage: coverimage || "",
             email,
             password,
@@ -309,7 +309,7 @@ const updateavatar = asynchandler(async (req, res) => {
         req.user?._id,
         {
             $set: {
-                avatar: avatarpathcloud
+                avatar: avatarpathcloud.url
             }
         },
         { new: true }
@@ -331,7 +331,7 @@ const updatecoverimage = asynchandler(async (req, res) => {
         req.user?._id,
         {
             $set: {
-                coverImage: coverimagecloud
+                coverImage: coverimagecloud.url
             }
         }, { new: true }
     ).select("-password")

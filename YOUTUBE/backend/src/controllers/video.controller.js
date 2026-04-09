@@ -31,7 +31,7 @@ const getAllVideos = asynchandler(async (req, res) => {
         });
     }
 
-    // 🛡️ 3. SMART PRIVACY LOGIC
+    //  3. SMART PRIVACY LOGIC
     // We only force videos to be "published" IF:
     // A) We are on the general Home Feed (no userId provided)
     // B) We are on a Channel Page, but the logged-in user is NOT the owner
@@ -69,6 +69,7 @@ const getAllVideos = asynchandler(async (req, res) => {
             createdAt: 1,
             isPublished: 1, //  Added this so your frontend knows which ones are private!
             ownerDetails: {
+                _id:1,
                 username: 1,
                 avatar: 1,
                 fullname: 1

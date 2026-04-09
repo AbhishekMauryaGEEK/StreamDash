@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../utils/axios';
 import VideoCard from '../components/common/VideoCard';
+import { useAuth } from '../context/AuthContext';
 import { Loader2, PlaySquare } from 'lucide-react';
 
 export default function ChannelPage() {
+    const { user: currentUser } = useAuth(); // Logged in user [cite: 643]
     const { username } = useParams();
     const [profile, setProfile] = useState(null);
-    const [videos, setVideos] = useState([]); // 👈 State for videos
+    const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
     const fetchChannelData = async () => {
-        setLoading(true);
         try {
             // 1. Fetch Profile Info
             const userRes = await api.get(`/users/c/${username}`);
@@ -22,7 +22,7 @@ export default function ChannelPage() {
             // 2. Fetch Videos ONLY IF profile exists
             if (userData?._id) {
                 const videoRes = await api.get(`/videos?userId=${userData._id}`);
-                // Handle aggregatePaginate structure (data.docs)
+                // Handle aggregatePaginate structure (data.docs) [cite: 647]
                 const videoData = videoRes.data.data.docs || videoRes.data.data;
                 setVideos(videoData);
             }
@@ -32,31 +32,31 @@ export default function ChannelPage() {
             setLoading(false);
         }
     };
-    fetchChannelData();
-}, [username]);
 
-    if (loading) return (
-        <div className="h-96 flex flex-col items-center justify-center gap-4 text-gray-400">
-            <Loader2 className="animate-spin w-10 h-10 text-primary" />
-            <p>Loading channel...</p>
-        </div>
-    );
+    useEffect(() => {
+        fetchChannelData();
+    }, [username]);
 
+    if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
     if (!profile) return <div className="p-10 text-center text-white">Channel not found.</div>;
 
     return (
         <div className="text-white animate-in fade-in duration-500">
-            {/* Cover Image */}
+            {/* Banner Section [cite: 650] */}
             <div className="h-48 md:h-64 w-full bg-[#121212] overflow-hidden">
                 {profile.coverImage ? (
-                    <img src={profile.coverImage} className="w-full h-full object-cover" alt="Banner" />
+                    <img
+                        src={profile.coverImage}
+                        className="w-full h-full object-cover"
+                        alt="Channel Banner"
+                    />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-zinc-900 to-zinc-800" />
                 )}
             </div>
 
             <div className="max-w-7xl mx-auto px-6 -mt-12 space-y-8 pb-20">
-                {/* Channel Header */}
+                {/* Channel Header Info */}
                 <div className="flex flex-col md:flex-row items-center md:items-end gap-6 pb-8 border-b border-white/10">
                     <img
                         src={profile.avatar}
@@ -66,17 +66,12 @@ export default function ChannelPage() {
                     <div className="flex-1 text-center md:text-left space-y-1 pb-2">
                         <h1 className="text-4xl font-black">{profile.fullname}</h1>
                         <p className="text-gray-400 font-medium tracking-tight">
-                            @{profile.username} • {profile.subscribersCount} subscribers • {videos.length} videos
+                            @{profile.username} • {profile.subscribersCount || 0} subscribers • {videos.length} videos
                         </p>
-                    </div>
-                    <div className="pb-2">
-                        <button className="bg-white text-black px-10 py-3 rounded-full font-bold hover:bg-gray-200 transition-all active:scale-95 shadow-lg">
-                            Subscribe
-                        </button>
                     </div>
                 </div>
 
-                {/* Videos Section */}
+                {/* Videos Grid */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b-2 border-primary w-fit pb-2 px-1">
                         <PlaySquare className="w-5 h-5 text-primary" />
@@ -86,7 +81,12 @@ export default function ChannelPage() {
                     {videos.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                             {videos.map((video) => (
-                                <VideoCard key={video._id} video={video} />
+                                <VideoCard
+                                    key={video._id}
+                                    video={video}
+                                    currentUser={currentUser} // 👈 Correctly passing 'currentUser' [cite: 659]
+                                    onVideoUpdate={fetchChannelData} // 👈 Refresh this specific list
+                                />
                             ))}
                         </div>
                     ) : (
@@ -94,6 +94,20 @@ export default function ChannelPage() {
                             <PlaySquare size={48} className="opacity-20" />
                             <p className="italic font-medium">This channel hasn't uploaded any videos yet.</p>
                         </div>
+                    )}
+                </div>
+                <div className="flex-1 text-center md:text-left space-y-3 pb-2">
+                    <h1 className="text-4xl font-black">{profile.fullname}</h1>
+                    <p className="text-gray-400 font-medium tracking-tight">
+                        @{profile.username} • {profile.subscribersCount} subscribers • {videos.length} videos
+                    </p>
+
+                    {/* Don't show subscribe button on your own profile */}
+                    {currentUser?._id !== profile?._id && (
+                        <SubscribeButton
+                            channelId={profile._id}
+                            initialIsSubscribed={profile.isSubscribed}
+                        />
                     )}
                 </div>
             </div>
