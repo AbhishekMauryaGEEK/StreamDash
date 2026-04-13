@@ -28,7 +28,7 @@ app.use((req, res, next) => {
     next();
 })
 import userRouter from "./routes/user.routes.js";
-import subscriptionRouter from "./routes/Subscriber.route.js";
+import subscriptionRouter from "./routes/subscriber.route.js"
 import videoRouter from "./routes/video.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
@@ -38,7 +38,7 @@ import playlistRouter from "./routes/playlist.routes.js";
 import Commentrouter from "./routes/comment.routes.js";
 // Routes Declaration
 app.use("/api/v1/users",userRouter)
-app.use("/api/v1/subscriptions",subscriptionRouter)
+app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/videos",videoRouter)
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/dashboard", dashboardRouter);

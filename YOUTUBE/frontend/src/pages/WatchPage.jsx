@@ -3,9 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Loader2 } from 'lucide-react';
 import api from '../utils/axios';
 import { formatDistanceToNow } from 'date-fns';
-import VideoListCard from '../components/common/VideoListCard'; // Ensure this import exists!
+import VideoListCard from '../components/common/VideoListCard'; 
+import SubscribeButton from '../components/subscription/SubscribeButton';
+import { useAuth } from '../context/AuthContext'; // Import auth context
 
 export default function WatchPage() {
+    const { user: currentUser } = useAuth(); // Get logged in user
     const { videoId } = useParams();
     const [video, setVideo] = useState(null);
     const [recommendations, setRecommendations] = useState([]);
@@ -18,7 +21,6 @@ export default function WatchPage() {
                 setLoading(true);
                 setError(null);
 
-                // 🚀 Parallel Fetch: Get both the video and the list at once!
                 const [videoRes, recRes] = await Promise.all([
                     api.get(`/videos/${videoId}`),
                     api.get('/videos')
@@ -28,7 +30,6 @@ export default function WatchPage() {
                 const allVideos = recRes.data.data.docs || [];
 
                 setVideo(currentVideo);
-                // Filter out current video from recommendations
                 setRecommendations(allVideos.filter(v => v._id !== videoId));
                 
                 window.scrollTo(0, 0);
@@ -41,7 +42,7 @@ export default function WatchPage() {
         };
 
         if (videoId) fetchAllPageData();
-    }, [videoId]); // Clean dependency array
+    }, [videoId]);
 
     if (loading) return (
         <div className="flex h-[80vh] items-center justify-center">
@@ -81,18 +82,27 @@ export default function WatchPage() {
                     <div className="flex flex-wrap items-center justify-between gap-4 py-2 border-b border-white/5 pb-6">
                         <div className="flex items-center gap-4">
                             <Link to={`/c/${channel?.username}`}>
-                                <img src={channel?.avatar || 'https://via.placeholder.com/48'} alt={channel?.username} className="w-12 h-12 rounded-full border border-white/10 object-cover" />
+                                <img src={channel?.avatar} alt={channel?.username} className="w-12 h-12 rounded-full border border-white/10 object-cover" />
                             </Link>
                             <div>
                                 <Link to={`/c/${channel?.username}`} className="flex items-center gap-1 font-bold text-white hover:text-primary transition">
                                     {channel?.username || "Unknown Channel"}
                                     <CheckCircle size={14} className="text-primary fill-primary/10" />
                                 </Link>
-                                <p className="text-xs text-gray-400">1.2M subscribers</p>
+                                <p className="text-xs text-gray-400">
+                                    {channel?.subscribersCount || 0} subscribers
+                                </p>
                             </div>
-                            <button className="ml-4 bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gray-200 transition">
-                                Subscribe
-                            </button>
+
+                            {/* Don't show subscribe button on your own videos */}
+                            {currentUser?._id !== channel?._id && (
+                                <div className="ml-4">
+                                    <SubscribeButton 
+                                        channelId={channel?._id} 
+                                        initialIsSubscribed={video.isSubscribed} 
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-full border border-white/10">

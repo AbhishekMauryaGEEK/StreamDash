@@ -8,6 +8,7 @@ const navItems = [
     { name: 'Subscriptions', icon: Youtube, path: '/subscriptions' },
     { name: 'Dashboard', icon: BarChart3, path: '/dashboard' },
     { name: 'Settings', icon: Settings, path: '/settings' },
+    
 ];
 
 export default function Sidebar() {

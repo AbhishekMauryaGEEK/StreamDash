@@ -1,0 +1,73 @@
+import mongoose, { isValidObjectId } from "mongoose";
+import { Follow } from "../models/follow.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asynchandler } from "../utils/asyncHandler.js";
+
+const toggleFollow = asynchandler(async (req, res) => {
+    const { userId } = req.params; // ID of the person to follow
+    if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid User ID");
+
+    const credentials = { follower: req.user?._id, following: userId };
+    const existingFollow = await Follow.findOne(credentials);
+
+    if (existingFollow) {
+        await Follow.findByIdAndDelete(existingFollow._id);
+        return res.status(200).json(new ApiResponse(200, { followed: false }, "Unfollowed successfully"));
+    }
+
+    await Follow.create(credentials);
+    return res.status(200).json(new ApiResponse(200, { followed: true }, "Followed successfully"));
+});
+
+const getFollowingList = asynchandler(async (req, res) => {
+    const followerId = req.user?._id;
+
+    // Fix: Ensure the ID is valid before pipeline to prevent BSONError
+    if (!isValidObjectId(followerId)) throw new ApiError(401, "Invalid User Session");
+
+    const following = await Follow.aggregate([
+        { 
+            $match: { follower: new mongoose.Types.ObjectId(followerId) } 
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "following",
+                foreignField: "_id",
+                as: "details",
+                pipeline: [{ $project: { username: 1, fullName: 1, avatar: 1 } }]
+            }
+        },
+        { $unwind: "$details" },
+        { $project: { _id: 0, details: 1 } }
+    ]);
+
+    return res.status(200).json(new ApiResponse(200, following, "Following list fetched"));
+});
+
+const getFollowersList = asynchandler(async (req, res) => {
+    const { userId } = req.params;
+    if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid User ID");
+
+    const followers = await Follow.aggregate([
+        { 
+            $match: { following: new mongoose.Types.ObjectId(userId) } 
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "follower",
+                foreignField: "_id",
+                as: "details",
+                pipeline: [{ $project: { username: 1, fullName: 1, avatar: 1 } }]
+            }
+        },
+        { $unwind: "$details" },
+        { $project: { _id: 0, details: 1 } }
+    ]);
+
+    return res.status(200).json(new ApiResponse(200, followers, "Followers list fetched"));
+});
+
+export { toggleFollow, getFollowingList, getFollowersList };

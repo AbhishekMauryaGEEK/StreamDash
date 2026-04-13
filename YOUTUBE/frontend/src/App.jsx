@@ -15,6 +15,7 @@ import HomeFeed from './pages/HomeFeed';
 import Settings from './pages/Settings';     
 import ChannelPage from './pages/ChannelPage'; 
 import WatchPage from './pages/WatchPage';
+import SubscriptionsPage from './pages/SubscriptionsPage';
 export default function App() {
     const { user, loading } = useAuth();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -61,6 +62,7 @@ export default function App() {
                                             <Route path="/c/:username" element={<ChannelPage />} />
                                             <Route path="/auth" element={<Navigate to="/" replace />} />
                                             <Route path="*" element={<Navigate to="/" replace />} />
+                                            <Route path="/subscriptions" element={<SubscriptionsPage />} />
                                         </Routes>
                                     </main>
                                 </div>

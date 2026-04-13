@@ -4,9 +4,9 @@ import api from '../utils/axios';
 import VideoCard from '../components/common/VideoCard';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, PlaySquare } from 'lucide-react';
-
+import SubscribeButton from '../components/subscription/SubscribeButton';
 export default function ChannelPage() {
-    const { user: currentUser } = useAuth(); // Logged in user [cite: 643]
+    const { user: currentUser } = useAuth(); // Logged in user
     const { username } = useParams();
     const [profile, setProfile] = useState(null);
     const [videos, setVideos] = useState([]);
@@ -84,8 +84,8 @@ export default function ChannelPage() {
                                 <VideoCard
                                     key={video._id}
                                     video={video}
-                                    currentUser={currentUser} // 👈 Correctly passing 'currentUser' [cite: 659]
-                                    onVideoUpdate={fetchChannelData} // 👈 Refresh this specific list
+                                    currentUser={currentUser} // Correctly passing 'currentUser'
+                                    onVideoUpdate={fetchChannelData} //  Refresh this specific list
                                 />
                             ))}
                         </div>
@@ -97,10 +97,10 @@ export default function ChannelPage() {
                     )}
                 </div>
                 <div className="flex-1 text-center md:text-left space-y-3 pb-2">
-                    <h1 className="text-4xl font-black">{profile.fullname}</h1>
+                    {/* <h1 className="text-4xl font-black">{profile.fullname}</h1>
                     <p className="text-gray-400 font-medium tracking-tight">
                         @{profile.username} • {profile.subscribersCount} subscribers • {videos.length} videos
-                    </p>
+                    </p> */}
 
                     {/* Don't show subscribe button on your own profile */}
                     {currentUser?._id !== profile?._id && (
