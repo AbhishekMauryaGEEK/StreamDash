@@ -6,15 +6,15 @@ import {
     toggleFollow 
 } from "../controllers/follow.controller.js";
 
-const router = Router();
-router.use(verifyJWT);
+const followRouter = Router();
+followRouter.use(verifyJWT);
 
 // Get the list of people I follow
-router.route("/list/following").get(getFollowingList);
+followRouter.route("/list/following").get(getFollowingList);
 
 // Follow/Unfollow someone or get their followers
-router.route("/u/:userId")
+followRouter.route("/u/:userId")
     .post(toggleFollow)
     .get(getFollowersList);
 
-export default router;
+export default followRouter;

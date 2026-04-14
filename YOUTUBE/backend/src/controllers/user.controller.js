@@ -10,12 +10,12 @@ const generateAccessandrefereshtokens = async (userId) => {
         const user = await User.findById(userId);
         const accesstoken = await user.generateAccessToken();
         const refreshtoken = await user.generateRefreshToken(); // 👈 Fixed spelling
-        
+
         user.refreshToken = refreshtoken;
         await user.save({ validateBeforeSave: false });
-        
+
         // Fix the return key here:
-        return { accesstoken, refreshtoken }; 
+        return { accesstoken, refreshtoken };
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating tokens");
     }
@@ -50,7 +50,7 @@ const registerUser = asynchandler(async (req, res) => {
         if (existeduser) {
             throw new ApiError(409, "User with creditales allready exist")
         }
-       const avatarLocal = req.files && req.files.avatar ? req.files.avatar[0].path : null;
+        const avatarLocal = req.files && req.files.avatar ? req.files.avatar[0].path : null;
         console.log(avatarLocal);
 
         let coverImageLocalPath;
@@ -116,7 +116,7 @@ const loginUser = asynchandler(async (req, res) => {
         throw new ApiError(404, "user does not exist");
     }
 
-    const passres = await userres.isPasswordCorrect(password) 
+    const passres = await userres.isPasswordCorrect(password)
 
     // Logic was backwards  
     if (!passres) {
@@ -218,12 +218,12 @@ const refreshaccessToken = asynchandler(async (req, res) => {
             throw new ApiError(401, "Refresh token is expired or used");
         }
 
-        
+
         const { accesstoken, refreshtoken } = await generateAccessandrefereshtokens(user._id);
-        
+
         const options = {
             httpOnly: true,
-            secure:process.env.NODE_ENV === "production",
+            secure: process.env.NODE_ENV === "production",
             secure: true
         }
         return res
@@ -272,8 +272,8 @@ const getcurrentuser = asynchandler(async (req, res) => {
             // This creates the exact { statusCode: 200, data: {...}, message: "..." } 
             // object that your frontend AuthContext is waiting for!
             new ApiResponse(
-                200, 
-                req.user, 
+                200,
+                req.user,
                 "Current user fetched successfully"
             )
         );
@@ -340,66 +340,77 @@ const updatecoverimage = asynchandler(async (req, res) => {
         .json(new ApiResponse(200, user, ""))
 })
 const getUserProfile = asynchandler(async (req, res) => {
-    const { username } = req.params
+    const { username } = req.params;
+
     if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
+        throw new ApiError(400, "Username is missing");
     }
+    console.log("Current Logged In User ID:", req.user?._id);
     const channel = await User.aggregate([
         {
             $match: {
                 username: username.toLowerCase()
             }
-        }, {
+        },
+        {
+            // Look up followers (people following this user)
             $lookup: {
-                from: "subscriptions",
+                from: "follows", // Changed from "subscriptions"
                 localField: "_id",
-                foreignField: "channel",
-                as: "subscribers"
+                foreignField: "following", // Changed from "channel"
+                as: "followers"
             }
-        }, {
+        },
+        {
+            // Look up following (people this user follows)
             $lookup: {
-                from: "subscriptions",
+                from: "follows", // Changed from "subscriptions"
                 localField: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
+                foreignField: "follower", // Changed from "subscriber"
+                as: "following"
             }
         },
         {
             $addFields: {
-                subscribersCount: {
-                    $size: "$subscribers"
+                followersCount: {
+                    $size: "$followers"
                 },
-                channelsSubscribedtoCount: {
-                    $size: "$subscribedTo"
+                followingCount: {
+                    $size: "$following"
                 },
-                isSuscribed: {
+                isFollowed: { // Changed from isSuscribed
                     $cond: {
                         if: {
-                            $in: [req.user?.id, "$subscribers.subscriber"]
+                            $in: [req.user?._id.toString(), "$followers.follower"]
                         },
                         then: true,
                         else: false
                     }
                 }
             }
-        }, {
+        },
+        {
             $project: {
                 fullname: 1,
                 username: 1,
-                subscribersCount: 1,
-                channelsSubscribedtoCount: 1,
-                isSuscribed: 1,
+                followersCount: 1, // Updated naming
+                followingCount: 1, // Updated naming
+                isFollowed: 1,     // Updated naming
                 avatar: 1,
                 coverImage: 1,
                 email: 1
             }
         }
-    ])
+    ]);
+
     if (!channel?.length) {
-        throw new ApiError(404, "channel does not exist in the database")
+        throw new ApiError(404, "Channel does not exist in the database");
     }
-    return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"))
-})
+
+    return res.status(200).json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
 const forgetpassword = asynchandler(async (req, res) => {
     const { email } = req.body;
     if (!email) {

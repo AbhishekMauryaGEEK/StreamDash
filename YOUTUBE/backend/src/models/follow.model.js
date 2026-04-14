@@ -2,11 +2,11 @@ import mongoose, { Schema } from "mongoose";
 
 const followSchema = new Schema({
     follower: {
-        type: Schema.Types.ObjectId, // The person doing the following
+        type: String, // Changed from Schema.Types.ObjectId
         ref: "User"
     },
     following: {
-        type: Schema.Types.ObjectId, // The person being followed
+        type: String, // Changed from Schema.Types.ObjectId
         ref: "User"
     }
 }, { timestamps: true });

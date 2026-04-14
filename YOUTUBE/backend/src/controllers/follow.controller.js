@@ -5,8 +5,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asynchandler } from "../utils/asyncHandler.js";
 
 const toggleFollow = asynchandler(async (req, res) => {
-    const { userId } = req.params; // ID of the person to follow
-    if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid User ID");
+    const { userId } = req.params; 
+
+    // CHANGE: Remove isValidObjectId. Just check if userId exists.
+    if (!userId) throw new ApiError(400, "User ID is required");
 
     const credentials = { follower: req.user?._id, following: userId };
     const existingFollow = await Follow.findOne(credentials);
@@ -21,14 +23,18 @@ const toggleFollow = asynchandler(async (req, res) => {
 });
 
 const getFollowingList = asynchandler(async (req, res) => {
+    // We just need the ID as a string
     const followerId = req.user?._id;
 
-    // Fix: Ensure the ID is valid before pipeline to prevent BSONError
-    if (!isValidObjectId(followerId)) throw new ApiError(401, "Invalid User Session");
+    if (!followerId) {
+        throw new ApiError(401, "Invalid User Session");
+    }
 
     const following = await Follow.aggregate([
         { 
-            $match: { follower: new mongoose.Types.ObjectId(followerId) } 
+            // DO NOT use 'new mongoose.Types.ObjectId()'
+            // Matching directly against the UUID string
+            $match: { follower: followerId } 
         },
         {
             $lookup: {
@@ -45,14 +51,16 @@ const getFollowingList = asynchandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, following, "Following list fetched"));
 });
-
 const getFollowersList = asynchandler(async (req, res) => {
     const { userId } = req.params;
-    if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid User ID");
+    
+    // CHANGE: Remove isValidObjectId here too
+    if (!userId) throw new ApiError(400, "User ID is required");
 
     const followers = await Follow.aggregate([
         { 
-            $match: { following: new mongoose.Types.ObjectId(userId) } 
+            // Match the UUID string directly
+            $match: { following: userId } 
         },
         {
             $lookup: {

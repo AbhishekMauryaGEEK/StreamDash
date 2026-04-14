@@ -69,7 +69,7 @@ const getAllVideos = asynchandler(async (req, res) => {
             createdAt: 1,
             isPublished: 1, //  Added this so your frontend knows which ones are private!
             ownerDetails: {
-                _id:1,
+                _id: 1,
                 username: 1,
                 avatar: 1,
                 fullname: 1
@@ -152,17 +152,109 @@ const publishAVideo = asynchandler(async (req, res) => {
 const getVideoById = asynchandler(async (req, res) => {
     const { videoId } = req.params;
 
-    if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
+    // 1. RAW CHECK - Find the base video document
+    const rawVideo = await Video.findById(videoId);
+    
+    if (!rawVideo) {
+        throw new ApiError(404, "Video not found in database");
+    }
 
-    const video = await Video.findById(videoId).populate("owner", "username avatar fullname").lean();
+    // 2. AGGREGATE - With type-insensitive lookups
+    const videoArray = await Video.aggregate([
+        {
+            $match: { _id: rawVideo._id }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "follows",
+                            localField: "_id",
+                            foreignField: "following",
+                            as: "followers"
+                        }
+                    },
+                    {
+                        $addFields: {
+                            subscribersCount: { $size: "$followers" },
+                            // Debugging follow sync
+                            followerList: "$followers.follower"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: { path: "$owner", preserveNullAndEmptyArrays: true }
+        },
+        {
+            // TYPE-INSENSITIVE LOOKUP for Likes
+            $lookup: {
+                from: "likes",
+                let: { v_id: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $or: [
+                                    { $eq: ["$video", "$$v_id"] },
+                                    { $eq: ["$video", { $toString: "$$v_id" }] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                likesCount: { $size: "$likes" },
+                // Just for the console log below
+                allLikedBy: "$likes.likedBy"
+            }
+        }
+    ]);
 
-    if (!video) throw new ApiError(404, "Video not found");
-    console.log("BACKEND_POPULATE_CHECK",video.owner);  
+    const result = videoArray[0];
+
+    // --- THE ULTIMATE TRUTH LOGS ---
+    console.log("--------------------------------------------------");
+    console.log("🔍 [SYNC DEBUG] Starting Analysis...");
+    console.log("1. Current User (You):", req.user?._id);
+    console.log("2. Video ID being viewed:", videoId);
+    
+    if (result) {
+        // Log the Likes logic
+        const likedByArray = result.allLikedBy || [];
+        console.log("3. Found Likes in DB:", likedByArray.length);
+        console.log("4. User IDs in Like Collection:", likedByArray);
+        
+        // Manual string comparison check
+        const isLikedMatch = likedByArray.some(id => String(id) === String(req.user?._id));
+        console.log("5. Match Found for Likes?:", isLikedMatch ? "✅ YES" : "❌ NO");
+        
+        // Inject the verified boolean
+        result.isLiked = isLikedMatch;
+
+        // Log the Follow logic
+        const followerArray = result.owner?.followerList || [];
+        const isFollowMatch = followerArray.some(id => String(id) === String(req.user?._id));
+        console.log("6. Match Found for Follow?:", isFollowMatch ? "✅ YES" : "❌ NO");
+        
+        result.owner.isSubscribed = isFollowMatch;
+    }
+    console.log("--------------------------------------------------");
+
     return res.status(200).json(
-        new ApiResponse(200, video, "Video fetched successfully")
+        new ApiResponse(200, result, "Video fetched successfully")
     );
 });
-
 // 4. Update Video Details
 const updateVideo = asynchandler(async (req, res) => {
     const { videoId } = req.params;

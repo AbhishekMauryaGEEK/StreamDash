@@ -4,9 +4,10 @@ import api from '../utils/axios';
 import VideoCard from '../components/common/VideoCard';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, PlaySquare } from 'lucide-react';
-import SubscribeButton from '../components/subscription/SubscribeButton';
+import FollowButton from "../components/follow/FollowButton"; // Corrected Path
+
 export default function ChannelPage() {
-    const { user: currentUser } = useAuth(); // Logged in user
+    const { user: currentUser } = useAuth(); 
     const { username } = useParams();
     const [profile, setProfile] = useState(null);
     const [videos, setVideos] = useState([]);
@@ -14,15 +15,12 @@ export default function ChannelPage() {
 
     const fetchChannelData = async () => {
         try {
-            // 1. Fetch Profile Info
             const userRes = await api.get(`/users/c/${username}`);
             const userData = userRes.data.data;
             setProfile(userData);
 
-            // 2. Fetch Videos ONLY IF profile exists
             if (userData?._id) {
                 const videoRes = await api.get(`/videos?userId=${userData._id}`);
-                // Handle aggregatePaginate structure (data.docs) [cite: 647]
                 const videoData = videoRes.data.data.docs || videoRes.data.data;
                 setVideos(videoData);
             }
@@ -37,37 +35,44 @@ export default function ChannelPage() {
         fetchChannelData();
     }, [username]);
 
-    if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
+    if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
     if (!profile) return <div className="p-10 text-center text-white">Channel not found.</div>;
 
     return (
         <div className="text-white animate-in fade-in duration-500">
-            {/* Banner Section [cite: 650] */}
+            {/* Banner Section */}
             <div className="h-48 md:h-64 w-full bg-[#121212] overflow-hidden">
                 {profile.coverImage ? (
-                    <img
-                        src={profile.coverImage}
-                        className="w-full h-full object-cover"
-                        alt="Channel Banner"
-                    />
+                    <img src={profile.coverImage} className="w-full h-full object-cover" alt="Banner" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-zinc-900 to-zinc-800" />
                 )}
             </div>
 
             <div className="max-w-7xl mx-auto px-6 -mt-12 space-y-8 pb-20">
-                {/* Channel Header Info */}
+                {/* Header Section */}
                 <div className="flex flex-col md:flex-row items-center md:items-end gap-6 pb-8 border-b border-white/10">
                     <img
                         src={profile.avatar}
                         className="w-40 h-40 rounded-full border-8 border-[#0a0a0a] object-cover shadow-2xl"
                         alt="Avatar"
                     />
-                    <div className="flex-1 text-center md:text-left space-y-1 pb-2">
-                        <h1 className="text-4xl font-black">{profile.fullname}</h1>
-                        <p className="text-gray-400 font-medium tracking-tight">
-                            @{profile.username} • {profile.subscribersCount || 0} subscribers • {videos.length} videos
-                        </p>
+                    <div className="flex-1 text-center md:text-left space-y-3">
+                        <div>
+                            <h1 className="text-4xl font-black">{profile.fullName}</h1>
+                            <p className="text-gray-400 font-medium tracking-tight mt-1">
+                                @{profile.username} • {profile.subscribersCount || 0} followers • {videos.length} videos
+                            </p>
+                        </div>
+
+                        {/* Follow Button Logic */}
+                        {currentUser?._id !== profile?._id && (
+                            <FollowButton
+                                userId={profile._id}
+                                initialIsFollowed={profile.isFollowed} // Map old state to new component
+                                onSuccess={fetchChannelData}
+                            />
+                        )}
                     </div>
                 </div>
 
@@ -84,8 +89,8 @@ export default function ChannelPage() {
                                 <VideoCard
                                     key={video._id}
                                     video={video}
-                                    currentUser={currentUser} // Correctly passing 'currentUser'
-                                    onVideoUpdate={fetchChannelData} //  Refresh this specific list
+                                    currentUser={currentUser}
+                                    onVideoUpdate={fetchChannelData}
                                 />
                             ))}
                         </div>
@@ -94,20 +99,6 @@ export default function ChannelPage() {
                             <PlaySquare size={48} className="opacity-20" />
                             <p className="italic font-medium">This channel hasn't uploaded any videos yet.</p>
                         </div>
-                    )}
-                </div>
-                <div className="flex-1 text-center md:text-left space-y-3 pb-2">
-                    {/* <h1 className="text-4xl font-black">{profile.fullname}</h1>
-                    <p className="text-gray-400 font-medium tracking-tight">
-                        @{profile.username} • {profile.subscribersCount} subscribers • {videos.length} videos
-                    </p> */}
-
-                    {/* Don't show subscribe button on your own profile */}
-                    {currentUser?._id !== profile?._id && (
-                        <SubscribeButton
-                            channelId={profile._id}
-                            initialIsSubscribed={profile.isSubscribed}
-                        />
                     )}
                 </div>
             </div>

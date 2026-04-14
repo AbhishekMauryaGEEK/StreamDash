@@ -2,26 +2,36 @@ import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asynchandler } from "../utils/asyncHandler.js";
-const togglevideolike =asynchandler(async(req,res)=>{
-    const{videoId}=req.params;
-    const userId=req.user?._id;
-    const existingLike =await Like.findOne({
-        video:videoId,
-        likedBy:userId
+const togglevideolike = asynchandler(async (req, res) => {
+    const { videoId } = req.params;
+    const userId = req.user?._id?.toString(); // Force string for UUID safety
+
+    if (!videoId) throw new ApiError(400, "Video ID is required");
+
+    // 1. Try to find the existing like
+    const existingLike = await Like.findOne({
+        video: videoId,
+        likedBy: userId
     });
-    if(existingLike){
-        await Like.findByIdAndDelete(existingLike._id);
-        return res
-        .status(200)
-        .json(new ApiResponse(200,{isLiked:false},"Unliked video"));
+
+    if (existingLike) {
+        // 2. If it exists, remove it (Unlike)
+        await Like.deleteOne({ _id: existingLike._id });
+        return res.status(200).json(new ApiResponse(200, { isLiked: false }, "Unliked video"));
     }
-    await Like.create({
-        video:videoId,
-        likedBy:userId
-    });
-    return res
-    .status(200)
-    .json(new ApiResponse(200,{isLiked:true},"Liked video"));
+
+    // 3. If it doesn't exist, create it (Like)
+    // We use a try-catch here in case two requests hit at the exact same time
+    try {
+        await Like.create({
+            video: videoId,
+            likedBy: userId
+        });
+        return res.status(200).json(new ApiResponse(200, { isLiked: true }, "Liked video"));
+    } catch (error) {
+        // If a duplicate was created by a parallel request, just return success anyway
+        return res.status(200).json(new ApiResponse(200, { isLiked: true }, "Liked video"));
+    }
 });
 const toggleCommentLike =asynchandler(async(req,res)=>{
     const{commentId}=req.params;
