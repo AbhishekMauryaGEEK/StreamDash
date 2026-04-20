@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, ThumbsDown, Share2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { 
+    CheckCircle, 
+    ThumbsDown, 
+    Share2, 
+    MoreHorizontal, 
+    Loader2, 
+    PlusSquare 
+} from 'lucide-react';
 import api from '../utils/axios';
 import { formatDistanceToNow } from 'date-fns';
 import VideoListCard from '../components/common/VideoListCard'; 
 import FollowButton from "../components/follow/FollowButton";
 import LikeButton from "../components/common/LikeButton"; 
 import { useAuth } from '../context/AuthContext';
+import CommentSection from '../components/comment/CommentSection';
+import PlaylistModal from '../components/playlist/PlaylistModal';
 
 export default function WatchPage() {
     const { user: currentUser } = useAuth();
@@ -15,6 +24,9 @@ export default function WatchPage() {
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Playlist Modal State
+    const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
     const fetchAllPageData = async () => {
         try {
@@ -58,59 +70,131 @@ export default function WatchPage() {
     const channel = video.owner;
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-8 max-w-[1800px] mx-auto">
-            <div className="flex-1">
-                <div className="relative aspect-video rounded-3xl overflow-hidden bg-black shadow-2xl">
-                    <video src={video.videoFile} controls autoPlay className="w-full h-full" poster={video.thumbnail} />
+        <div className="flex flex-col lg:flex-row gap-8 p-4 lg:p-10 max-w-[1700px] mx-auto min-h-screen">
+            {/* Left Column: Video + Details + Comments */}
+            <div className="flex-1 min-w-0">
+                {/* Player Section */}
+                <div className="relative aspect-video rounded-3xl overflow-hidden bg-black shadow-2xl ring-1 ring-white/10">
+                    <video 
+                        src={video.videoFile} 
+                        controls 
+                        autoPlay 
+                        className="w-full h-full" 
+                        poster={video.thumbnail} 
+                    />
                 </div>
 
-                <div className="mt-5 space-y-4">
-                    <h1 className="text-2xl font-black text-white">{video.title}</h1>
+                <div className="mt-6 space-y-5">
+                    <h1 className="text-2xl lg:text-3xl font-black text-white leading-tight">
+                        {video.title}
+                    </h1>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-b border-white/5">
+                    {/* Action Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 py-2 border-b border-white/5 pb-6">
                         <div className="flex items-center gap-4">
                             <Link to={`/c/${channel?.username}`}>
-                                <img src={channel?.avatar} className="w-12 h-12 rounded-full object-cover" alt="avatar" />
+                                <img 
+                                    src={channel?.avatar} 
+                                    className="w-12 h-12 rounded-full object-cover border border-white/10" 
+                                    alt="avatar" 
+                                />
                             </Link>
                             <div>
-                                <Link to={`/c/${channel?.username}`} className="flex items-center gap-1 font-bold">
+                                <Link to={`/c/${channel?.username}`} className="flex items-center gap-1 font-bold text-white hover:text-primary transition">
                                     {channel?.username} <CheckCircle size={14} className="text-primary" />
                                 </Link>
                                 <p className="text-xs text-gray-400">{channel?.subscribersCount || 0} followers</p>
                             </div>
 
                             {currentUser?._id !== channel?._id && (
-                                <FollowButton 
-                                    userId={channel?._id} 
-                                    initialIsFollowed={channel?.isSubscribed} 
-                                />
+                                <div className="ml-2">
+                                    <FollowButton 
+                                        userId={channel?._id} 
+                                        initialIsFollowed={channel?.isSubscribed} 
+                                    />
+                                </div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-full border border-white/10">
-                            <LikeButton 
-                                id={video._id}
-                                type="v"
-                                initialIsLiked={video.isLiked}
-                                initialCount={video.likesCount}
-                            />
-                            <button className="px-4 py-2 text-white hover:bg-white/10 rounded-r-full border-l border-white/10">
-                                <ThumbsDown size={18} />
+                        {/* Video Controls */}
+                        <div className="flex items-center gap-3">
+                            {/* Like/Dislike Group */}
+                            <div className="flex items-center bg-white/5 p-1 rounded-full border border-white/10">
+                                <LikeButton 
+                                    id={video._id}
+                                    type="v"
+                                    initialIsLiked={video.isLiked}
+                                    initialCount={video.likesCount}
+                                />
+                                <button className="px-4 py-2 text-white hover:bg-white/10 rounded-r-full border-l border-white/10 transition">
+                                    <ThumbsDown size={18} />
+                                </button>
+                            </div>
+
+                            {/* Save to Playlist Button */}
+                            <button 
+                                onClick={() => setIsPlaylistModalOpen(true)}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition font-bold text-sm"
+                            >
+                                <PlusSquare size={18} className="text-primary" />
+                                <span>Save</span>
+                            </button>
+
+                            {/* Share & More */}
+                            <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition font-bold text-sm">
+                                <Share2 size={18} />
+                                <span>Share</span>
+                            </button>
+
+                            <button className="p-2.5 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition">
+                                <MoreHorizontal size={20} />
                             </button>
                         </div>
                     </div>
 
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                        <p className="text-sm font-bold">{video.views} views • {formatDistanceToNow(new Date(video.createdAt))} ago</p>
-                        <p className="text-sm text-gray-300 mt-2">{video.description}</p>
+                    {/* Description Box */}
+                    <div className="bg-white/5 rounded-2xl p-5 border border-white/10 hover:bg-white/[0.07] transition-all group">
+                        <div className="flex items-center gap-2 text-sm font-bold text-white mb-2">
+                            <span>{video.views.toLocaleString()} views</span>
+                            <span className="text-gray-500">•</span>
+                            <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
+                        </div>
+                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                            {video.description}
+                        </p>
+                    </div>
+
+                    {/* Comment Section */}
+                    <div className="pt-6">
+                        <CommentSection videoId={videoId} />
                     </div>
                 </div>
             </div>
 
-            <div className="lg:w-[400px] space-y-4">
-                <h3 className="font-bold px-2">Up Next</h3>
-                {recommendations.map(rec => <VideoListCard key={rec._id} video={rec} />)}
+            {/* Right Column: Recommendations */}
+            <div className="lg:w-[400px] shrink-0 space-y-4">
+                <div className="flex items-center justify-between px-2">
+                    <h3 className="font-black text-white text-lg">Up Next</h3>
+                    <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Autoplay ON</span>
+                </div>
+                <div className="flex flex-col gap-4">
+                    {recommendations.length > 0 ? (
+                        recommendations.map(rec => (
+                            <VideoListCard key={rec._id} video={rec} />
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm italic px-2">No recommendations found.</p>
+                    )}
+                </div>
             </div>
+
+            {/* Playlist Selection Modal Overlay */}
+            {isPlaylistModalOpen && (
+                <PlaylistModal 
+                    videoId={videoId} 
+                    onClose={() => setIsPlaylistModalOpen(false)} 
+                />
+            )}
         </div>
     );
 }

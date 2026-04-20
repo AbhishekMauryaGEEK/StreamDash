@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import ChannelPage from './pages/ChannelPage'; 
 import WatchPage from './pages/WatchPage';
 import FollowingPage from './pages/FollowingPage';
+import PlaylistModal from './components/playlist/PlaylistModal';
 export default function App() {
     const { user, loading } = useAuth();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -63,6 +64,8 @@ export default function App() {
                                             <Route path="/auth" element={<Navigate to="/" replace />} />
                                             <Route path="*" element={<Navigate to="/" replace />} />
                                            <Route path="/following" element={<FollowingPage />} />
+                                           <Route path="/playlist" element={<PlaylistModal/>} />
+
                                         </Routes>
                                     </main>
                                 </div>

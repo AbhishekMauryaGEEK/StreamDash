@@ -10,7 +10,7 @@ const createPlaylist = asynchandler(async (req, res) => {
 
     const playlist = await Playlist.create({
         name,
-        description,
+        description:description || "",
         owner: req.user?._id,
         videos: []
     });

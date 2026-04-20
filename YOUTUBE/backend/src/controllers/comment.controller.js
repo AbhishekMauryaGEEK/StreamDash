@@ -10,9 +10,7 @@ const getVideoComments = asynchandler(async (req, res) => {
 
     const aggregate = Comment.aggregate([
         {
-            $match: {
-                video: videoId // Direct UUID string match
-            }
+            $match: { video: videoId }
         },
         {
             $lookup: {
@@ -20,13 +18,37 @@ const getVideoComments = asynchandler(async (req, res) => {
                 localField: "owner",
                 foreignField: "_id",
                 as: "ownerDetails",
-                pipeline: [
-                    { $project: { username: 1, avatar: 1, fullName: 1 } }
-                ]
+                pipeline: [{ $project: { username: 1, avatar: 1, fullName: 1 } }]
             }
         },
         { $unwind: "$ownerDetails" },
-        { $sort: { createdAt: -1 } } // Newest comments first
+        {
+            // Join with likes collection to count comment likes
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "comment",
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                likesCount: { $size: "$likes" },
+                isLiked: {
+                    $cond: {
+                        if: {
+                            $in: [
+                                { $toString: req.user?._id },
+                                { $map: { input: "$likes", as: "l", in: { $toString: "$$l.likedBy" } } }
+                            ]
+                        },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        { $sort: { createdAt: -1 } }
     ]);
 
     const options = {
@@ -40,27 +62,6 @@ const getVideoComments = asynchandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, comments, "Comments fetched successfully"));
 });
-
-// 2. Add a comment to a video
-const addComment = asynchandler(async (req, res) => {
-    const { videoId } = req.params;
-    const { content } = req.body;
-
-    if (!content?.trim()) {
-        throw new ApiError(400, "Comment content is required");
-    }
-
-    const comment = await Comment.create({
-        content,
-        video: videoId,
-        owner: req.user?._id // Logged in user's UUID
-    });
-
-    return res
-        .status(201)
-        .json(new ApiResponse(201, comment, "Comment added successfully"));
-});
-
 // 3. Update a comment
 const updateComment = asynchandler(async (req, res) => {
     const { commentId } = req.params;
@@ -109,7 +110,39 @@ const deleteComment = asynchandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, {}, "Comment deleted successfully"));
 });
+const addComment = asynchandler(async (req, res) => {
+    const { videoId } = req.params;
+    const { content } = req.body;
 
+    // 1. Validation
+    if (!content || content.trim() === "") {
+        throw new ApiError(400, "Comment content cannot be empty");
+    }
+
+    if (!videoId) {
+        throw new ApiError(400, "Video ID is required to post a comment");
+    }
+
+    // 2. Create the comment
+    // We use req.user._id (which we know is a UUID string from your logs)
+    const comment = await Comment.create({
+        content: content.trim(),
+        video: videoId,
+        owner: req.user?._id
+    });
+
+    // 3. Check if creation was successful
+    if (!comment) {
+        throw new ApiError(500, "Something went wrong while saving the comment");
+    }
+
+    // 4. Return response
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(201, comment, "Comment posted successfully")
+        );
+});
 export {
     getVideoComments,
     addComment,
