@@ -25,9 +25,14 @@ const getAllVideos = asynchandler(async (req, res) => {
     }
 
     // 2. Filter by Search Query
-    if (query) {
+   if (query) {
         pipeline.push({
-            $match: { title: { $regex: query, $options: "i" } }
+            $match: {
+                $or: [
+                    { title: { $regex: query, $options: "i" } },
+                    { description: { $regex: query, $options: "i" } }
+                ]
+            }
         });
     }
 
