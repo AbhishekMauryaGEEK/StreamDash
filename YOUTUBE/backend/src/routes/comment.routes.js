@@ -9,9 +9,14 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const Commentrouter = Router();
 
-Commentrouter.use(verifyJWT); // All comment routes require login
+// 1. GET comments should be accessible to everyone 
+// (verifyJWT is optional here, but we'll use it inside the controller logic safely)
+Commentrouter.route("/:videoId").get(getVideoComments);
 
-Commentrouter.route("/:videoId").get(getVideoComments).post(addComment);
-Commentrouter.route("/c/:commentId").delete(deleteComment).patch(updateComment);
+// 2. POST, PATCH, and DELETE definitely need verifyJWT
+Commentrouter.route("/:videoId").post(verifyJWT, addComment);
+Commentrouter.route("/c/:commentId")
+    .patch(verifyJWT, updateComment)
+    .delete(verifyJWT, deleteComment);
 
 export default Commentrouter;
