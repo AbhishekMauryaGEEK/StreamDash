@@ -1,21 +1,17 @@
 {
-  "name": "backend",
+  "name": "youtube",
   "version": "1.0.0",
-  "description": "a full frontend and backend project",
+  "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AbhishekMauryaGEEK/backend_learn.git"
-  },
+"scripts": {
+  "acp": "git status && git add . && git commit -m 'change' && git push && clear",
+  "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/AbhishekMauryaGEEK/backend_learn/issues"
-  },
-  "homepage": "https://github.com/AbhishekMauryaGEEK/backend_learn#readme"
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
