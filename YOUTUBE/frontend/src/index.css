@@ -1,21 +1,150 @@
 @import "tailwindcss";
 
-/* Define your theme variables directly in CSS for v4 */
 @theme {
-  --color-background: #0a0a0a;
-  --color-surface: #121212;
-  --color-border: #222222;
-  --color-primary: #ef4444;
+  /* We map Tailwind colors to the dynamic variables below */
+  --color-background: var(--background);
+  --color-text-main: var(--text);
+  --color-primary: var(--primary-dynamic);
+  --color-surface: var(--glass);
+  --color-border: var(--border-dynamic);
+}
+
+/* --- THEME DEFINITIONS --- */
+
+:root, [data-theme='dark'] {
+  --background: #0a0a0a;
+  --text: #ffffff;
+  --primary-dynamic: #ef4444; 
+  --border-dynamic: #222222;
+  --glass: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='light'] {
+  --background: #ffffff;
+  --text: #000000;
+  --primary-dynamic: #000000; /* Brutalist Black */
+  --border-dynamic: #000000;
+  --glass: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='cyber'] {
+  --background: #050505;
+  --text: #ccff00; /* Neon Lime */
+  --primary-dynamic: #ccff00;
+  --border-dynamic: rgba(204, 255, 0, 0.3);
+  --glass: rgba(204, 255, 0, 0.05);
 }
 
 @layer base {
   body {
-    background-color: var(--color-background);
-    color: white;
+    background-color: var(--background);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
+
 .glass-card-hover:hover {
-  border-color: rgba(239, 68, 68, 0.3); /* Matches your primary red */
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(239, 68, 68, 0.1);
+  border-color: var(--primary-dynamic);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 15px var(--glass);
   transition: all 0.4s ease;
+}
+/* --- TERMINAL / HACKER --- */
+[data-theme='matrix'] {
+  --background: #000a00;
+  --text: #00ff41; /* Classic Matrix Green */
+  --primary-dynamic: #00ff41;
+  --border-dynamic: #003b00;
+  --glass: rgba(0, 255, 65, 0.05);
+}
+
+[data-theme='retro-cmd'] {
+  --background: #1a1a1a;
+  --text: #33ff33;
+  --primary-dynamic: #33ff33;
+  --border-dynamic: #ffffff;
+  --glass: rgba(255, 255, 255, 0.1);
+}
+
+/* --- ANIME INSPIRED --- */
+[data-theme='eva-01'] { /* Evangelion Unit-01 */
+  --background: #1a0b2e;
+  --text: #a7ff00;
+  --primary-dynamic: #8a2be2;
+  --border-dynamic: #a7ff00;
+  --glass: rgba(167, 255, 0, 0.05);
+}
+
+[data-theme='akira'] { /* Neo Tokyo / Akira */
+  --background: #0f0f0f;
+  --text: #ffffff;
+  --primary-dynamic: #ff0000;
+  --border-dynamic: #ff0000;
+  --glass: rgba(255, 0, 0, 0.1);
+}
+
+[data-theme='demon-slayer'] { /* Zenitsu / Thunder */
+  --background: #121212;
+  --text: #ffe600;
+  --primary-dynamic: #ffffff;
+  --border-dynamic: #ffe600;
+  --glass: rgba(255, 230, 0, 0.05);
+}
+
+/* --- PIXEL / RETRO GAME --- */
+[data-theme='gameboy'] {
+  --background: #8bac0f;
+  --text: #0f380f;
+  --primary-dynamic: #306230;
+  --border-dynamic: #0f380f;
+  --glass: rgba(15, 56, 15, 0.1);
+}
+
+[data-theme='stardust'] { /* Pixel Space vibe */
+  --background: #0b0e14;
+  --text: #e0e0e0;
+  --primary-dynamic: #7b61ff;
+  --border-dynamic: #2a2e3a;
+  --glass: rgba(123, 97, 255, 0.1);
+}
+
+/* --- UNIQUE AESTHETIC --- */
+[data-theme='blood-moon'] {
+  --background: #0d0202;
+  --text: #ff4d4d;
+  --primary-dynamic: #3d0000;
+  --border-dynamic: #ff4d4d;
+  --glass: rgba(255, 77, 77, 0.05);
+}
+
+[data-theme='bubblegum-punk'] {
+  --background: #12000a;
+  --text: #ff007f;
+  --primary-dynamic: #00f2ff;
+  --border-dynamic: #ff007f;
+  --glass: rgba(255, 0, 127, 0.05);
+}
+
+[data-theme='blueprint'] {
+  --background: #003366;
+  --text: #ffffff;
+  --primary-dynamic: #ffffff;
+  --border-dynamic: rgba(255, 255, 255, 0.2);
+  --glass: rgba(255, 255, 255, 0.1);
+}
+.terminal-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.1) 50%
+  ), linear-gradient(
+    90deg, 
+    rgba(255, 0, 0, 0.03), 
+    rgba(0, 255, 0, 0.01), 
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 4px, 3px 100%;
+  opacity: 0.15;
 }

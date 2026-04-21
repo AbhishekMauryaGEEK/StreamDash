@@ -21,10 +21,41 @@ const createPlaylist = asynchandler(async (req, res) => {
 // 2. Get User Playlists
 const getUserPlaylists = asynchandler(async (req, res) => {
     const { userId } = req.params;
-    const playlists = await Playlist.find({ owner: userId });
+
+    const playlists = await Playlist.aggregate([
+        { 
+            $match: { owner: userId } 
+        },
+        {
+            $lookup: {
+                from: "videos",
+                let: { video_ids: "$videos" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $in: [
+                                    { $toString: "$_id" }, 
+                                    { $map: { input: "$$video_ids", as: "v", in: { $toString: "$$v" } } }
+                                ]
+                            }
+                        }
+                    },
+                    { $project: { thumbnail: 1 } },
+                    { $limit: 1 } // Only need the first one for the cover
+                ],
+                as: "coverVideo"
+            }
+        },
+        {
+            $addFields: {
+                thumbnail: { $arrayElemAt: ["$coverVideo.thumbnail", 0] }
+            }
+        }
+    ]);
+
     return res.status(200).json(new ApiResponse(200, playlists, "Playlists fetched"));
 });
-
 // 3. Add Video to Playlist
 const addVideoToPlaylist = asynchandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
@@ -57,10 +88,19 @@ const removeVideoFromPlaylist = asynchandler(async (req, res) => {
 // 5. Update/Delete Playlist (Standard Logic)
 const deletePlaylist = asynchandler(async (req, res) => {
     const { playlistId } = req.params;
-    await Playlist.findByIdAndDelete(playlistId);
-    return res.status(200).json(new ApiResponse(200, {}, "Playlist deleted"));
-});
+    
+    const playlist = await Playlist.findById(playlistId);
+    if (!playlist) throw new ApiError(404, "Playlist not found");
+    
+    // Check ownership
+    if (playlist.owner.toString() !== req.user?._id.toString()) {
+        throw new ApiError(403, "You do not have permission to delete this playlist");
+    }
 
+    await Playlist.findByIdAndDelete(playlistId);
+
+    return res.status(200).json(new ApiResponse(200, {}, "Playlist deleted successfully"));
+});
 const updatePlaylist = asynchandler(async (req, res) => {
     const { playlistId } = req.params;
     const { name, description } = req.body;
@@ -74,43 +114,59 @@ const updatePlaylist = asynchandler(async (req, res) => {
 const getPlaylistById = asynchandler(async (req, res) => {
     const { playlistId } = req.params;
 
+    const rawPlaylist = await Playlist.findById(playlistId);
+    if (!rawPlaylist) throw new ApiError(404, "Playlist not found");
+
     const playlist = await Playlist.aggregate([
         {
-            $match: {
-                _id: playlistId // Using your UUID string
-            }
+            $match: { _id: rawPlaylist._id }
         },
         {
             $lookup: {
                 from: "videos",
-                localField: "videos",
-                foreignField: "_id",
-                as: "playlistVideos",
+                let: { video_ids: "$videos" },
                 pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                // This forces the match even if types are mixed
+                                $in: [{ $toString: "$_id" }, { 
+                                    $map: { 
+                                        input: "$$video_ids", 
+                                        as: "vid", 
+                                        in: { $toString: "$$vid" } 
+                                    } 
+                                }]
+                            }
+                        }
+                    },
                     {
                         $lookup: {
                             from: "users",
                             localField: "owner",
                             foreignField: "_id",
                             as: "videoOwner",
-                            pipeline: [
-                                { $project: { username: 1, avatar: 1 } }
-                            ]
+                            pipeline: [{ $project: { username: 1, avatar: 1 } }]
                         }
                     },
                     { $unwind: "$videoOwner" }
-                ]
+                ],
+                as: "playlistVideos"
             }
-        }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+                pipeline: [{ $project: { username: 1, avatar: 1 } }]
+            }
+        },
+        { $unwind: "$ownerDetails" }
     ]);
 
-    if (!playlist.length) {
-        throw new ApiError(404, "Playlist not found");
-    }
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, playlist[0], "Playlist fetched successfully"));
+    return res.status(200).json(new ApiResponse(200, playlist[0], "Fetched"));
 });
 
 export {

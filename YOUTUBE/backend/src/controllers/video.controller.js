@@ -343,6 +343,22 @@ const togglePublishStatus = asynchandler(async (req, res) => {
         new ApiResponse(200, { isPublished: video.isPublished }, "Status toggled")
     );
 });
+const incrementViewCount = asynchandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    // Use $inc for atomic updates to prevent race conditions
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 1 } },
+        { new: true }
+    );
+
+    if (!video) throw new ApiError(404, "Video not found");
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { views: video.views }, "View count incremented"));
+});
 export {
     getAllVideos,
     publishAVideo,
@@ -350,4 +366,5 @@ export {
     updateVideo,
     deleteVideo,
     togglePublishStatus,
+    incrementViewCount
 };

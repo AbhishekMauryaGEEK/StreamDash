@@ -6,13 +6,13 @@ import {
     publishAVideo,
     togglePublishStatus,
     updateVideo,
+    incrementViewCount, // ✅ Added this
 } from "../controllers/video.controller.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { upload } from "../middlewares/multer.middleware.js";
 
-const videoRouter =Router();
+const videoRouter = Router();
 
-// Apply verifyJWT middleware to all routes in this file
 videoRouter.use(verifyJWT); 
 
 videoRouter
@@ -20,15 +20,8 @@ videoRouter
     .get(getAllVideos)
     .post(
         upload.fields([
-            {
-                name: "videoFile",
-                maxCount: 1,
-            },
-            {
-                name: "thumbnail",
-                maxCount: 1,
-            },
-            
+            { name: "videoFile", maxCount: 1 },
+            { name: "thumbnail", maxCount: 1 }
         ]),
         publishAVideo
     );
@@ -40,5 +33,8 @@ videoRouter
     .patch(upload.single("thumbnail"), updateVideo);
 
 videoRouter.route("/toggle/publish/:videoId").patch(togglePublishStatus);
+
+// ✅ View Increment Route
+videoRouter.route("/v/view/:videoId").patch(incrementViewCount);
 
 export default videoRouter;

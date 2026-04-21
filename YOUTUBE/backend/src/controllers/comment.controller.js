@@ -10,7 +10,7 @@ const getVideoComments = asynchandler(async (req, res) => {
 
     const aggregate = Comment.aggregate([
         {
-            $match: { video: videoId }
+            $match: { video: String(videoId) }
         },
         {
             $lookup: {

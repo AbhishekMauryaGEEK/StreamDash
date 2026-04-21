@@ -13,7 +13,7 @@ export default function CommentInput({ videoId, onCommentAdded }) {
 
         setIsSubmitting(true);
         try {
-            const res = await api.post(`/Comment/v/${videoId}`, { content });
+            const res = await api.post(`/Comment/${videoId}`, { content });
             setContent("");
             if (onCommentAdded) onCommentAdded(res.data.data);
         } catch (err) {

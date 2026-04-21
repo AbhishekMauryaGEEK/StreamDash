@@ -11,7 +11,7 @@ export default function CommentSection({ videoId }) {
 
     const fetchComments = useCallback(async () => {
         try {
-            const res = await api.get(`/Comment/v/${videoId}`);
+            const res = await api.get(`/Comment/${videoId}`);
             // AggregatePaginate returns data in .docs
             setComments(res.data.data.docs || []);
             setTotalComments(res.data.data.totalDocs || 0);
