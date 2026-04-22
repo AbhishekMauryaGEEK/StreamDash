@@ -9,7 +9,7 @@ const generateAccessandrefereshtokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accesstoken = await user.generateAccessToken();
-    const refreshtoken = await user.generateRefreshToken(); // 👈 Fixed spelling
+    const refreshtoken = await user.generateRefreshToken(); //  Fixed spelling
 
     user.refreshToken = refreshtoken;
     await user.save({ validateBeforeSave: false });
