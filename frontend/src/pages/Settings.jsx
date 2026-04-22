@@ -72,7 +72,7 @@ export default function Settings() {
     },
     {
       id: "bubblegum-punk",
-      name: "Pink Glitch",
+      name: "Neon Glitch",
       bg: "bg-[#12000a]",
       accent: "bg-[#00f2ff]",
     },
