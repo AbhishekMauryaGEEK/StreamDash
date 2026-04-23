@@ -35,7 +35,7 @@ userRouter.route("/login").post(loginUser);
 userRouter.route("/logout").post(verifyJWT, logoutUser);
 userRouter.route("/refresh-token").post(refreshaccessToken);
 userRouter.route("/change-password").patch(verifyJWT, changecurrentpassword);
-userRouter.route("/current-user").get(verifyJWT, getcurrentuser); // Fixed typo 'currentusser'
+userRouter.route("/current-user").get(verifyJWT, getcurrentuser); 
 userRouter
   .route("/avatar")
   .patch(verifyJWT, upload.single("avatar"), updateavatar);
