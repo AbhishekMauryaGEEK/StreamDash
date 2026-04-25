@@ -55,8 +55,6 @@ const userSchema = new Schema({
         default:undefined
     }
 }, { timestamps: true });
-
-// FIX: REMOVED 'next'. 
 // We use simple async/await. If it throws, Mongoose catches it automatically.
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
