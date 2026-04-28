@@ -4,9 +4,9 @@ import { asynchandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 export const verifyJWT = asynchandler(async (req, res, next) => {
     try {
-        console.log("🔍=== AUTH DEBUG START ===");
-        console.log("Raw cookies:", req.cookies);
-        console.log("Raw headers.Authorization:", req.header("Authorization"));
+        // console.log("=== AUTH DEBUG START ===");
+        // console.log("Raw cookies:", req.cookies);
+        // console.log("Raw headers.Authorization:", req.header("Authorization"));
         // 1. Try cookies first (most common)
         let token = req.cookies?.accessToken;
         console.log("Step 1 - Cookie token:", token);
