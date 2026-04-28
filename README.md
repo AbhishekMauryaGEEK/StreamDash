@@ -149,5 +149,4 @@ flowchart LR
 # root
 npm run dev
 ```
-
 Runs backend + frontend concurrently via root script.
