@@ -19,7 +19,7 @@ The data model intentionally mixes Mongo-native and relational-style identifiers
 - `User._id` is a **UUID string** (`uuidv4`) instead of ObjectId.
 - Cross-entity references like `Video.owner`, `Like.likedBy`, `Comment.owner`, `Comment.video` are stored as **String refs** (UUID-oriented linking).
 - Aggregation pipelines use `$lookup` plus type-safe matching (`$toString` fallback where needed) to bridge mixed ID types.
-- Result: **relational semantics in a NoSQL store**—explicit foreign-key-like links, app-level integrity checks, and Mongo aggregation joins.
+- Result: **relational semantics in a NoSQL store**—explicit foreign-key-like links, app-level integrity checks, and Mongo aggregation  joins.
 
 ## Technical Stack
 
