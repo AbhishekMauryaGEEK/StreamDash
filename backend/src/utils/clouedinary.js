@@ -36,7 +36,7 @@ const upload = async (localFilePath, folderName = "streamdash/general") => {
         });
 
         console.log(` Cloudinary Upload Success [${folderName}]:`, transfer.url);
-        if (transfer.duration) console.log("⏱️ Detected Duration:", transfer.duration);
+        if (transfer.duration) console.log(" Detected Duration:", transfer.duration);
 
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
