@@ -19,7 +19,7 @@ The data model intentionally mixes Mongo-native and relational-style identifiers
 - `User._id` is a **UUID string** (`uuidv4`) instead of ObjectId.
 - Cross-entity references like `Video.owner`, `Like.likedBy`, `Comment.owner`, `Comment.video` are stored as **String refs** (UUID-oriented linking).
 - Aggregation pipelines use `$lookup` plus type-safe matching (`$toString` fallback where needed) to bridge mixed ID types.
-- Result: **relational semantics in a NoSQL store**—explicit foreign-key-like links, app-level integrity checks, and Mongo aggregation joins.
+- Result: **relational semantics in a NoSQL store**—explicit foreign-key-like links, app-level integrity checks, and Mongo aggregation  joins.
 
 ## Technical Stack
 
@@ -131,7 +131,37 @@ flowchart LR
   F --> G[MongoDB<br/>Video document create]
   G --> H[API Response<br/>201 Created]
 ```
+## Environment Variables
 
+Create a `.env` file inside the `backend` directory:
+
+```env
+PORT=8000
+CORS_ORIGIN=*
+MONGODB_URI=mongodb+srv://your_url_here
+
+ACCESS_TOKEN_SECRET=your_long_random_string_here
+ACCESS_TOKEN_EXPIRY=1d
+
+REFRESH_TOKEN_SECRET=your_another_random_string_here
+REFRESH_TOKEN_EXPIRY=10d
+
+# Cloudinary Config
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email Config
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+### Notes
+
+- Use a MongoDB Atlas connection string for `MONGODB_URI`
+- Generate long random strings for JWT secrets
+- For Gmail SMTP, use a Google App Password instead of your normal password
+- Cloudinary credentials can be found in your Cloudinary dashboard
 ## OSS Contribution Workflow
 
 1. Fork repository and clone your fork.

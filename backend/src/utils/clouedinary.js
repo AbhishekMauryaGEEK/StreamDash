@@ -10,7 +10,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 🚀 Extract Public ID (handles folders and version tags automatically)
+// Extract Public ID (handles folders and version tags automatically)
 const extractPublicId = (fileUrl) => {
     if (!fileUrl) return null;
     const parts = fileUrl.split('/upload/');
@@ -32,21 +32,21 @@ const upload = async (localFilePath, folderName = "streamdash/general") => {
 
         const transfer = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
-            folder: folderName // 👈 Routes file to the correct folder
+            folder: folderName //  Routes file to the correct folder
         });
 
-        console.log(`🚀 Cloudinary Upload Success [${folderName}]:`, transfer.url);
-        if (transfer.duration) console.log("⏱️ Detected Duration:", transfer.duration);
+        console.log(` Cloudinary Upload Success [${folderName}]:`, transfer.url);
+        if (transfer.duration) console.log(" Detected Duration:", transfer.duration);
 
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
-            console.log("✅ Local file deleted successfully");
+            console.log(" Local file deleted successfully");
         }
 
         return transfer;
 
     } catch (error) {
-        console.error("❌ Cloudinary Upload Error:", error.message);
+        console.error(" Cloudinary Upload Error:", error.message);
         if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
         return null;
     }
@@ -61,11 +61,11 @@ const deleteFromCloudinary = async (fileUrl, resourceType = "image") => {
             resource_type: resourceType
         });
 
-        console.log(`✅ Deleted from Cloudinary [${resourceType}]:`, publicId);
+        console.log(` Deleted from Cloudinary [${resourceType}]:`, publicId);
         return response;
 
     } catch (error) {
-        console.error(`❌ Error deleting from Cloudinary:`, error.message);
+        console.error(` Error deleting from Cloudinary:`, error.message);
         return null;
     }
 }
