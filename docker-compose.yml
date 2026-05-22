@@ -1,26 +1,31 @@
 version: '3.8'
 
 services:
-  # --- THE BACKEND CONTAINER ---
+  # --- BACKEND SERVICE ---
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: dev   # switch to 'prod' for production build
     container_name: streamdash_backend
     ports:
-      - "8000:8000" # Maps your PC's port 8000 to the container's port 8000
+      - "8000:8000"
     volumes:
-      - ./backend:/app # Hot-Reloading: Syncs your local code to the container in real-time
-      - /app/node_modules # Prevents your local node_modules from overwriting the container's
+      - ./backend:/app        # hot reload in dev
+      - /app/node_modules     # prevent overwriting node_modules
     env_file:
-      - ./backend/.env # Loads your Cloudinary and Mongo URIs
+      - ./backend/.env        # environment variables
 
-  # --- THE FRONTEND CONTAINER ---
+  # --- FRONTEND SERVICE ---
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev   # switch to 'prod' for production build
     container_name: streamdash_frontend
     ports:
-      - "5174:5174" # Maps your PC's port to Vite's port
+      - "5173:5173"           # dev mode (Vite)
+      # for prod, map "5174:80" since Nginx serves on 80
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend # Tells Docker to start the backend before the frontend
+      - backend

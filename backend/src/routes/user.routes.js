@@ -15,7 +15,7 @@ import {
   resetpassword,
   updateAccountDetails
 } from "../controllers/user.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT } from "../middlewares/AUTH.middleware.js";
 const userRouter = Router();
 userRouter.route("/register").post(
   upload.fields([
