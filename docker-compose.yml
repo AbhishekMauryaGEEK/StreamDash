@@ -22,7 +22,7 @@ services:
       target: dev   # switch to 'prod' for production build
     container_name: streamdash_frontend
     ports:
-      - "5173:5173"           # dev mode (Vite)
+      - "5174:5174"           # dev mode (Vite)
       # for prod, map "5174:80" since Nginx serves on 80
     volumes:
       - ./frontend:/app

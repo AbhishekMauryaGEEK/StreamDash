@@ -16,7 +16,7 @@ FROM node:20-alpine AS dev
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
-EXPOSE 5173
+EXPOSE 5174
 CMD ["npm", "run", "dev", "--", "--host"]
 
 # Stage 4: Production (serve with Nginx)
