@@ -35,7 +35,122 @@ The data model intentionally mixes Mongo-native and relational-style identifiers
 | Containers | Docker + docker-compose |
 
 > **Bun note:** the codebase is Bun-compatible at the app level, but current scripts/containers are configured with npm + Node images. A Bun runtime profile can be added as an optimization track.
+## Project Structure
 
+```txt
+BACKEND/
+├── README.md
+├── package.json
+├── docker-compose.yml
+├── backend/
+│   ├── Readme.md
+│   ├── Dockerfile
+│   ├── babel.config.json
+│   ├── cleanup.js
+│   ├── package.json
+│   ├── public/
+│   │   └── temp/
+│   └── src/
+│       ├── app.js
+│       ├── constants.js
+│       ├── index.js
+│       ├── controllers/
+│       │   ├── comment.controller.js
+│       │   ├── dashboard.controller.js
+│       │   ├── follow.controller.js
+│       │   ├── healthcheck.controller.js
+│       │   ├── like.controller.js
+│       │   ├── playlist.controller.js
+│       │   ├── tweet.controller.js
+│       │   ├── user.controller.js
+│       │   ├── ValidOBJ.txt
+│       │   └── video.controller.js
+│       ├── dbs/
+│       │   └── index.js
+│       ├── middlewares/
+│       │   ├── AUTH.middleware.js
+│       │   └── multer.middleware.js
+│       ├── models/
+│       │   ├── comment.model.js
+│       │   ├── follow.model.js
+│       │   ├── like.model.js
+│       │   ├── playlist.model.js
+│       │   ├── tweet.model.js
+│       │   ├── user.model.js
+│       │   └── video.model.js
+│       ├── routes/
+│       │   ├── comment.routes.js
+│       │   ├── dashboard.routes.js
+│       │   ├── follow.route.js
+│       │   ├── healthcheck.routes.js
+│       │   ├── like.routes.js
+│       │   ├── playlist.routes.js
+│       │   ├── tweet.routes.js
+│       │   ├── user.routes.js
+│       │   └── video.routes.js
+│       └── utils/
+│           ├── ApiError.js
+│           ├── ApiResponse.js
+│           ├── asyncHandler.js
+│           ├── axios.js
+│           ├── clouedinary.js
+│           └── sendEmail.js
+├── bridge/
+│   └── base/
+└── frontend/
+    ├── Dockerfile
+    ├── README.md
+    ├── eslint.config.js
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    ├── public/
+    └── src/
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+        ├── assets/
+        ├── components/
+        │   ├── comment/
+        │   │   ├── CommentCard.jsx
+        │   │   ├── CommentInput.jsx
+        │   │   └── CommentSection.jsx
+        │   ├── common/
+        │   │   ├── Header.jsx
+        │   │   ├── LikeButton.jsx
+        │   │   ├── PageTransition.jsx
+        │   │   ├── ProtectedRoute.jsx
+        │   │   ├── Sidebar.jsx
+        │   │   ├── VideoCard.jsx
+        │   │   └── VideoListCard.jsx
+        │   ├── dashboard/
+        │   │   ├── DeleteConfirmModal.jsx
+        │   │   └── EditVideoModal.jsx
+        │   ├── follow/
+        │   │   └── FollowButton.jsx
+        │   ├── playlist/
+        │   │   └── PlaylistModal.jsx
+        │   └── video/
+        │       ├── CommentSection.jsx
+        │       └── VideoUploadModal.jsx
+        ├── context/
+        │   └── AuthContext.jsx
+        ├── hooks/
+        ├── pages/
+        │   ├── AuthPage.jsx
+        │   ├── ChannelPage.jsx
+        │   ├── CommentSection.jsx
+        │   ├── Dashboard.jsx
+        │   ├── FollowingPage.jsx
+        │   ├── HomeFeed.jsx
+        │   ├── PlaylistDetail.jsx
+        │   ├── Playlists.jsx
+        │   ├── Settings.jsx
+        │   ├── UserProfile.jsx
+        │   └── WatchPage.jsx
+        └── utils/
+            └── axios.js
+```
 ## Dockerization
 
 Current setup (`docker-compose.yml` + backend/frontend Dockerfiles) is optimized for **development**:
