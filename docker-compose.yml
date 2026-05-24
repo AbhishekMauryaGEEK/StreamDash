@@ -28,4 +28,4 @@ services:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      - backend # Tells Docker to start the backend before the frontend
